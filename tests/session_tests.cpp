@@ -98,6 +98,8 @@ TEST_CASE("session serializes scene metadata and live snapshots") {
   CHECK(sceneJson.at("resolvedSeed").get<std::uint32_t>() == 42U);
   CHECK(sceneJson.at("scenario").at("window").at("title").get<std::string>() == "Session Test");
   CHECK(sceneJson.at("scenario").at("geometry").at("obstacles").size() == 1);
+  CHECK(sceneJson.at("particleStyles").at("radii").size() == 1);
+  CHECK(sceneJson.at("particleStyles").at("colors").size() == 4);
 
   CHECK(session.Update(0.1));
   const auto snapshot = session.CaptureSnapshot();
@@ -105,7 +107,9 @@ TEST_CASE("session serializes scene metadata and live snapshots") {
 
   CHECK(snapshotJson.at("particleCount").get<std::size_t>() == 1U);
   CHECK(snapshotJson.at("speedMultiplier").get<double>() == doctest::Approx(1.5));
-  CHECK(snapshotJson.at("particles").size() == 1);
+  CHECK(snapshotJson.at("particles").at("positions").size() == 2);
+  CHECK_FALSE(snapshotJson.at("particles").contains("radii"));
+  CHECK_FALSE(snapshotJson.at("particles").contains("colors"));
   CHECK(snapshotJson.at("trailSegments").size() == 1);
 }
 

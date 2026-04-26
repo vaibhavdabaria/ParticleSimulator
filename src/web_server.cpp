@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -193,6 +194,63 @@ crow::response ServeAsset(const fs::path& webRoot, std::string requestedPath) {
   response.set_header("Content-Type", GuessContentType(resolvedPath));
   response.write(ReadTextFile(resolvedPath));
   return response;
+}
+
+template <typename Value>
+void AppendBinaryValue(std::string& output, const Value& value) {
+  const auto* bytes = reinterpret_cast<const char*>(&value);
+  output.append(bytes, sizeof(Value));
+}
+
+std::uint16_t QuantizePosition(double value, double min, double max) {
+  const double extent = max - min;
+  if (extent <= 0.0) {
+    return 0;
+  }
+  const double normalized = std::clamp((value - min) / extent, 0.0, 1.0);
+  return static_cast<std::uint16_t>(normalized * 65535.0 + 0.5);
+}
+
+std::string SerializeSnapshotToBinary(const particle_simulator::SimulationSnapshotView& snapshot) {
+  constexpr std::uint32_t magic = 0x33535350;  // "PSS3" in little-endian byte order.
+  constexpr std::uint32_t flagsPaused = 1U;
+  const auto& particles = *snapshot.particles;
+  const auto& trailSegments = *snapshot.trailSegments;
+
+  std::string payload;
+  payload.reserve(56 + particles.size() * sizeof(std::uint16_t) * 2 +
+                  trailSegments.size() * (sizeof(float) * 4 + sizeof(std::uint8_t) * 4));
+  AppendBinaryValue(payload, magic);
+  AppendBinaryValue(payload, static_cast<std::uint32_t>(snapshot.particleCount));
+  AppendBinaryValue(payload, static_cast<std::uint32_t>(trailSegments.size()));
+  AppendBinaryValue(payload, snapshot.paused ? flagsPaused : 0U);
+  AppendBinaryValue(payload, static_cast<double>(snapshot.sequence));
+  AppendBinaryValue(payload, snapshot.simulationTime);
+  AppendBinaryValue(payload, snapshot.speedMultiplier);
+  AppendBinaryValue(payload, snapshot.gridCellSize);
+  AppendBinaryValue(payload, snapshot.resolvedSeed);
+  AppendBinaryValue(payload, static_cast<std::uint32_t>(0));
+
+  for (const auto& particle : particles) {
+    const auto x = QuantizePosition(particle.position.x, snapshot.boundsMin.x, snapshot.boundsMax.x);
+    const auto y = QuantizePosition(particle.position.y, snapshot.boundsMin.y, snapshot.boundsMax.y);
+    AppendBinaryValue(payload, x);
+    AppendBinaryValue(payload, y);
+  }
+
+  for (const auto& trailSegment : trailSegments) {
+    AppendBinaryValue(payload, static_cast<float>(trailSegment.start.x));
+    AppendBinaryValue(payload, static_cast<float>(trailSegment.start.y));
+    AppendBinaryValue(payload, static_cast<float>(trailSegment.end.x));
+    AppendBinaryValue(payload, static_cast<float>(trailSegment.end.y));
+  }
+  for (const auto& trailSegment : trailSegments) {
+    AppendBinaryValue(payload, trailSegment.color.r);
+    AppendBinaryValue(payload, trailSegment.color.g);
+    AppendBinaryValue(payload, trailSegment.color.b);
+    AppendBinaryValue(payload, trailSegment.color.a);
+  }
+  return payload;
 }
 
 class SimulationHub {
@@ -406,10 +464,11 @@ class SimulationHub {
 
   void SendSnapshot(const std::shared_ptr<SessionRecord>& record) {
     record->lastSnapshotSent = Clock::now();
-    SendEvent(record, json{
-                        {"type", "snapshot"},
-                        {"snapshot", particle_simulator::SerializeSimulationSnapshotToJson(record->session->CaptureSnapshot())},
-                    });
+    std::string payload;
+    record->session->VisitSnapshot([&payload](const particle_simulator::SimulationSnapshotView& snapshot) {
+      payload = SerializeSnapshotToBinary(snapshot);
+    });
+    SendBinary(record, std::move(payload));
   }
 
   void SendEvent(const std::shared_ptr<SessionRecord>& record, const json& message) {
@@ -418,6 +477,14 @@ class SimulationHub {
       return;
     }
     record->connection->send_text(message.dump());
+  }
+
+  void SendBinary(const std::shared_ptr<SessionRecord>& record, std::string message) {
+    std::scoped_lock connectionLock(record->connectionMutex);
+    if (record->connection == nullptr) {
+      return;
+    }
+    record->connection->send_binary(std::move(message));
   }
 
   fs::path scenarioDirectory_;

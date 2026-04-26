@@ -23,10 +23,31 @@ import type {
   SimulationSnapshot,
   Vec2,
 } from './types'
+import { WebGLSceneRenderer } from './webglRenderer'
 import './App.css'
 
 type ConnectionState = 'idle' | 'connecting' | 'connected' | 'disconnected' | 'error'
 type AppRoute = 'home' | 'settings'
+
+interface SnapshotMetrics {
+  sequence: number
+  simulationTime: number
+  paused: boolean
+  speedMultiplier: number
+  particleCount: number
+}
+
+interface StreamInstrumentation {
+  snapshotCount: number
+  totalBytes: number
+  totalParseMs: number
+  lastDrawMs: number
+}
+
+interface SnapshotFrame {
+  snapshot: SimulationSnapshot
+  receivedAt: number
+}
 
 function getRouteFromPathname(pathname: string): AppRoute {
   return pathname === '/settings' ? 'settings' : 'home'
@@ -395,93 +416,6 @@ function ColorField({
   )
 }
 
-function drawSnapshot(
-  canvas: HTMLCanvasElement,
-  scene: SimulationSceneSnapshot | null,
-  snapshot: SimulationSnapshot | null,
-) {
-  const context = canvas.getContext('2d')
-  if (!context || !scene) {
-    return
-  }
-
-  const devicePixelRatio = window.devicePixelRatio || 1
-  const width = canvas.clientWidth
-  const height = canvas.clientHeight
-  const canvasWidth = Math.max(1, Math.floor(width * devicePixelRatio))
-  const canvasHeight = Math.max(1, Math.floor(height * devicePixelRatio))
-  if (canvas.width !== canvasWidth) {
-    canvas.width = canvasWidth
-  }
-  if (canvas.height !== canvasHeight) {
-    canvas.height = canvasHeight
-  }
-  context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
-
-  const { scenario } = scene
-  const background = scenario.window.backgroundColor
-  context.fillStyle = `rgba(${background[0]}, ${background[1]}, ${background[2]}, ${background[3] / 255})`
-  context.fillRect(0, 0, width, height)
-
-  const horizontalPadding = 24
-  const topPadding = 24
-  const bottomPadding = 24
-  const boundsWidth = scenario.geometry.bounds.max[0] - scenario.geometry.bounds.min[0]
-  const boundsHeight = scenario.geometry.bounds.max[1] - scenario.geometry.bounds.min[1]
-  const availableWidth = Math.max(1, width - horizontalPadding * 2)
-  const availableHeight = Math.max(1, height - topPadding - bottomPadding)
-  const scale = Math.max(0.1, Math.min(availableWidth / boundsWidth, availableHeight / boundsHeight))
-  const offsetX = horizontalPadding + (availableWidth - boundsWidth * scale) * 0.5
-  const offsetY = topPadding + (availableHeight - boundsHeight * scale) * 0.5
-
-  const worldToScreen = (point: Vec2): [number, number] => [
-    offsetX + (point[0] - scenario.geometry.bounds.min[0]) * scale,
-    offsetY + (point[1] - scenario.geometry.bounds.min[1]) * scale,
-  ]
-
-  const topLeft = worldToScreen(scenario.geometry.bounds.min)
-  context.strokeStyle = 'rgba(255,255,255,0.65)'
-  context.lineWidth = 2
-  context.strokeRect(topLeft[0], topLeft[1], boundsWidth * scale, boundsHeight * scale)
-
-  scenario.geometry.obstacles.forEach((obstacle) => {
-    if (obstacle.type === 'rectangle') {
-      const position = worldToScreen(obstacle.position)
-      context.fillStyle = 'rgba(53, 89, 126, 1)'
-      context.fillRect(position[0], position[1], obstacle.size[0] * scale, obstacle.size[1] * scale)
-    } else {
-      const center = worldToScreen(obstacle.center)
-      context.fillStyle = 'rgba(171, 126, 76, 1)'
-      context.beginPath()
-      context.arc(center[0], center[1], obstacle.radius * scale, 0, Math.PI * 2)
-      context.fill()
-    }
-  })
-
-  if (!snapshot) {
-    return
-  }
-
-  snapshot.trailSegments.forEach((segment) => {
-    const start = worldToScreen(segment.start)
-    const end = worldToScreen(segment.end)
-    context.strokeStyle = `rgba(${segment.color[0]}, ${segment.color[1]}, ${segment.color[2]}, ${segment.color[3] / 255})`
-    context.lineWidth = 1.5
-    context.beginPath()
-    context.moveTo(start[0], start[1])
-    context.lineTo(end[0], end[1])
-    context.stroke()
-  })
-
-  snapshot.particles.forEach((particle) => {
-    const center = worldToScreen(particle.position)
-    context.fillStyle = `rgba(${particle.color[0]}, ${particle.color[1]}, ${particle.color[2]}, ${particle.color[3] / 255})`
-    context.beginPath()
-    context.arc(center[0], center[1], particle.radius * scale, 0, Math.PI * 2)
-    context.fill()
-  })
-}
-
 function findClosestSpeedIndex(speedOptions: number[], currentSpeed: number): number {
   let closestIndex = 0
   let closestDelta = Number.POSITIVE_INFINITY
@@ -526,7 +460,7 @@ function HomePage({
   uploadScenarioFile: (file: File) => Promise<void>
   downloadScenario: () => void
   runScenario: () => Promise<void>
-  snapshot: SimulationSnapshot | null
+  snapshot: SnapshotMetrics | null
   achievedFrameRate: number | null
   canvasRef: React.RefObject<HTMLCanvasElement | null>
   sendCommand: (payload: object) => void
@@ -1545,15 +1479,30 @@ function App() {
   const [builderMessage, setBuilderMessage] = useState('')
   const [showJsonPreview, setShowJsonPreview] = useState(false)
   const [, setConnectionState] = useState<ConnectionState>('idle')
-  const [scene, setScene] = useState<SimulationSceneSnapshot | null>(null)
-  const [snapshot, setSnapshot] = useState<SimulationSnapshot | null>(null)
+  const [snapshotMetrics, setSnapshotMetrics] = useState<SnapshotMetrics | null>(null)
   const [achievedFrameRate, setAchievedFrameRate] = useState<number | null>(null)
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const socketRef = useRef<WebSocket | null>(null)
-  const frameRateSampleRef = useRef<{ lastSnapshotTime: number | null; intervals: number[] }>({
-    lastSnapshotTime: null,
+  const sceneRef = useRef<SimulationSceneSnapshot | null>(null)
+  const snapshotRef = useRef<SimulationSnapshot | null>(null)
+  const previousSnapshotRef = useRef<SnapshotFrame | null>(null)
+  const latestSnapshotRef = useRef<SnapshotFrame | null>(null)
+  const interpolatedSnapshotRef = useRef<SimulationSnapshot | null>(null)
+  const interpolationPositionsRef = useRef<Float32Array | null>(null)
+  const rendererRef = useRef<WebGLSceneRenderer | null>(null)
+  const webGlErrorShownRef = useRef(false)
+  const renderRequestedRef = useRef(true)
+  const instrumentationRef = useRef<StreamInstrumentation>({
+    snapshotCount: 0,
+    totalBytes: 0,
+    totalParseMs: 0,
+    lastDrawMs: 0,
+  })
+  const frameRateSampleRef = useRef<{ lastFrameTime: number | null; intervals: number[]; lastReportedTime: number }>({
+    lastFrameTime: null,
     intervals: [],
+    lastReportedTime: 0,
   })
   const validationErrors = validateScenario(draft)
 
@@ -1585,12 +1534,52 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (!canvasRef.current || route !== 'home') {
-      return
+    let animationFrame = 0
+
+    const render = () => {
+      const now = performance.now()
+      if (canvasRef.current && route === 'home') {
+        if (rendererRef.current && !rendererRef.current.isRenderingCanvas(canvasRef.current)) {
+          rendererRef.current = null
+          webGlErrorShownRef.current = false
+        }
+        if (!rendererRef.current && !webGlErrorShownRef.current) {
+          try {
+            rendererRef.current = new WebGLSceneRenderer(canvasRef.current)
+          } catch (error) {
+            webGlErrorShownRef.current = true
+            setBuilderMessage(error instanceof Error ? error.message : 'WebGL2 is required to render the simulation.')
+          }
+        }
+        const shouldInterpolate =
+          latestSnapshotRef.current !== null &&
+          previousSnapshotRef.current !== null &&
+          !latestSnapshotRef.current.snapshot.paused
+        if (
+          rendererRef.current &&
+          sceneRef.current &&
+          (renderRequestedRef.current || shouldInterpolate || rendererRef.current.isDisplaySizeDirty())
+        ) {
+          try {
+            const snapshotToRender = getSnapshotForRender(now)
+            instrumentationRef.current.lastDrawMs = rendererRef.current.render(sceneRef.current, snapshotToRender)
+            updateAchievedFrameRate(now, snapshotToRender)
+            renderRequestedRef.current = false
+          } catch (error) {
+            rendererRef.current = null
+            renderRequestedRef.current = true
+            setBuilderMessage(error instanceof Error ? error.message : 'WebGL rendering failed.')
+          }
+        }
+      }
+      animationFrame = window.requestAnimationFrame(render)
     }
 
-    drawSnapshot(canvasRef.current, scene, snapshot)
-  }, [route, scene, snapshot])
+    animationFrame = window.requestAnimationFrame(render)
+    return () => {
+      window.cancelAnimationFrame(animationFrame)
+    }
+  }, [route])
 
   useEffect(() => {
     if (!selectedScenarioId) {
@@ -1651,12 +1640,27 @@ function App() {
 
     socketRef.current?.close()
     setConnectionState('connecting')
-    frameRateSampleRef.current = { lastSnapshotTime: null, intervals: [] }
+    frameRateSampleRef.current = { lastFrameTime: null, intervals: [], lastReportedTime: 0 }
+    sceneRef.current = null
+    snapshotRef.current = null
+    previousSnapshotRef.current = null
+    latestSnapshotRef.current = null
+    interpolatedSnapshotRef.current = null
+    interpolationPositionsRef.current = null
+    renderRequestedRef.current = true
+    instrumentationRef.current = {
+      snapshotCount: 0,
+      totalBytes: 0,
+      totalParseMs: 0,
+      lastDrawMs: 0,
+    }
+    setSnapshotMetrics(null)
     setAchievedFrameRate(null)
 
     try {
       const sessionId = await createSession({ scenario: draft })
       const socket = new WebSocket(buildWebSocketUrl(sessionId))
+      socket.binaryType = 'arraybuffer'
       socketRef.current = socket
 
       socket.onopen = () => {
@@ -1670,7 +1674,13 @@ function App() {
         if (socketRef.current !== socket) {
           return
         }
-        const serverEvent = parseServerEvent(event.data as string)
+        const rawMessage = event.data as string | ArrayBuffer
+        const parseStart = performance.now()
+        const serverEvent = parseServerEvent(rawMessage)
+        const parseMs = performance.now() - parseStart
+        if (serverEvent.type === 'snapshot') {
+          recordSnapshotInstrumentation(typeof rawMessage === 'string' ? rawMessage.length : rawMessage.byteLength, parseMs)
+        }
         handleServerEvent(serverEvent)
       }
 
@@ -1695,12 +1705,30 @@ function App() {
   function handleServerEvent(event: ServerEvent) {
     switch (event.type) {
       case 'sessionReady':
-        setScene(event.scene)
+        sceneRef.current = event.scene
+        snapshotRef.current = null
+        previousSnapshotRef.current = null
+        latestSnapshotRef.current = null
+        interpolatedSnapshotRef.current = null
+        interpolationPositionsRef.current = null
+        renderRequestedRef.current = true
         setConnectionState('connected')
         return
       case 'snapshot':
-        updateAchievedFrameRate(event.snapshot)
-        setSnapshot(event.snapshot)
+        previousSnapshotRef.current = latestSnapshotRef.current
+        latestSnapshotRef.current = {
+          snapshot: event.snapshot,
+          receivedAt: performance.now(),
+        }
+        snapshotRef.current = event.snapshot
+        renderRequestedRef.current = true
+        setSnapshotMetrics({
+          sequence: event.snapshot.sequence,
+          simulationTime: event.snapshot.simulationTime,
+          paused: event.snapshot.paused,
+          speedMultiplier: event.snapshot.speedMultiplier,
+          particleCount: event.snapshot.particleCount,
+        })
         setConnectionState('connected')
         return
       case 'status':
@@ -1710,26 +1738,105 @@ function App() {
     }
   }
 
-  function updateAchievedFrameRate(nextSnapshot: SimulationSnapshot) {
+  function recordSnapshotInstrumentation(byteCount: number, parseMs: number) {
+    const stats = instrumentationRef.current
+    stats.snapshotCount += 1
+    stats.totalBytes += byteCount
+    stats.totalParseMs += parseMs
+
+    if (import.meta.env.DEV && stats.snapshotCount % 60 === 0) {
+      console.debug('Particle stream metrics', {
+        avgSnapshotKb: Number((stats.totalBytes / stats.snapshotCount / 1024).toFixed(1)),
+        avgParseMs: Number((stats.totalParseMs / stats.snapshotCount).toFixed(2)),
+        lastDrawMs: Number(stats.lastDrawMs.toFixed(2)),
+      })
+    }
+  }
+
+  function getSnapshotForRender(now: number): SimulationSnapshot | null {
+    const latestFrame = latestSnapshotRef.current
+    if (!latestFrame) {
+      return snapshotRef.current
+    }
+
+    const previousFrame = previousSnapshotRef.current
+    const latestSnapshot = latestFrame.snapshot
+    if (
+      !previousFrame ||
+      latestSnapshot.paused ||
+      previousFrame.snapshot.particleCount !== latestSnapshot.particleCount ||
+      previousFrame.snapshot.particles.positions.length !== latestSnapshot.particles.positions.length ||
+      previousFrame.snapshot.particles.positionsAreNormalized !== true ||
+      latestSnapshot.particles.positionsAreNormalized !== true
+    ) {
+      return latestSnapshot
+    }
+
+    const previousPositions = previousFrame.snapshot.particles.positions
+    const latestPositions = latestSnapshot.particles.positions
+    const positionCount = latestPositions.length
+    if (interpolationPositionsRef.current?.length !== positionCount) {
+      interpolationPositionsRef.current = new Float32Array(positionCount)
+    }
+
+    const interval = Math.min(250, Math.max(16, latestFrame.receivedAt - previousFrame.receivedAt))
+    const renderTime = now - interval
+    const alpha = Math.min(1, Math.max(0, (renderTime - previousFrame.receivedAt) / interval))
+    const interpolatedPositions = interpolationPositionsRef.current
+    for (let index = 0; index < positionCount; index += 1) {
+      const previous = previousPositions[index] / 65535
+      const latest = latestPositions[index] / 65535
+      interpolatedPositions[index] = previous + (latest - previous) * alpha
+    }
+
+    const interpolatedSnapshot = interpolatedSnapshotRef.current
+    if (!interpolatedSnapshot) {
+      interpolatedSnapshotRef.current = {
+        ...latestSnapshot,
+        particles: {
+          positions: interpolatedPositions,
+          positionsAreNormalized: true,
+        },
+      }
+    } else {
+      interpolatedSnapshot.sequence = latestSnapshot.sequence
+      interpolatedSnapshot.simulationTime =
+        previousFrame.snapshot.simulationTime +
+        (latestSnapshot.simulationTime - previousFrame.snapshot.simulationTime) * alpha
+      interpolatedSnapshot.paused = latestSnapshot.paused
+      interpolatedSnapshot.speedMultiplier = latestSnapshot.speedMultiplier
+      interpolatedSnapshot.particleCount = latestSnapshot.particleCount
+      interpolatedSnapshot.resolvedSeed = latestSnapshot.resolvedSeed
+      interpolatedSnapshot.gridCellSize = latestSnapshot.gridCellSize
+      interpolatedSnapshot.particles.positions = interpolatedPositions
+      interpolatedSnapshot.particles.positionsAreNormalized = true
+      interpolatedSnapshot.trailSegments = latestSnapshot.trailSegments
+    }
+    return interpolatedSnapshotRef.current
+  }
+
+  function updateAchievedFrameRate(now: number, renderedSnapshot: SimulationSnapshot | null) {
     const sample = frameRateSampleRef.current
-    if (nextSnapshot.paused) {
-      sample.lastSnapshotTime = null
+    if (!renderedSnapshot || renderedSnapshot.paused) {
+      sample.lastFrameTime = null
       sample.intervals = []
       setAchievedFrameRate(null)
       return
     }
 
-    const now = performance.now()
-    if (sample.lastSnapshotTime !== null) {
-      const interval = now - sample.lastSnapshotTime
+    if (sample.lastFrameTime !== null) {
+      const interval = now - sample.lastFrameTime
       if (interval > 0 && interval < 1000) {
         sample.intervals = [...sample.intervals.slice(-29), interval]
-        const averageInterval =
-          sample.intervals.reduce((total, current) => total + current, 0) / sample.intervals.length
-        setAchievedFrameRate(1000 / averageInterval)
+        if (now - sample.lastReportedTime >= 250) {
+          const averageInterval =
+            sample.intervals.reduce((total, current) => total + current, 0) / sample.intervals.length
+          setAchievedFrameRate(1000 / averageInterval)
+          sample.lastReportedTime = now
+        }
       }
     }
-    sample.lastSnapshotTime = now
+    sample.lastFrameTime = now
   }
 
   function sendCommand(payload: object) {
@@ -1773,7 +1880,7 @@ function App() {
       uploadScenarioFile={uploadScenarioFile}
       downloadScenario={downloadScenario}
       runScenario={runScenario}
-      snapshot={snapshot}
+      snapshot={snapshotMetrics}
       achievedFrameRate={achievedFrameRate}
       canvasRef={canvasRef}
       sendCommand={sendCommand}

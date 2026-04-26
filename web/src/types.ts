@@ -109,22 +109,23 @@ export interface SimulationSceneSnapshot {
   scenario: Scenario
   resolvedSeed: number
   gridCellSize: number
-}
-
-export interface ParticleSnapshot {
-  position: Vec2
-  velocity: Vec2
-  radius: number
-  mass: number
-  restitution: number
-  color: ColorRgba
-  streakEnabled: boolean
+  particleStyles: ParticleStyleBuffer
 }
 
 export interface TrailSegmentSnapshot {
   start: Vec2
   end: Vec2
   color: ColorRgba
+}
+
+export interface ParticleStyleBuffer {
+  radii: number[]
+  colors: number[]
+}
+
+export interface ParticleSnapshotBuffer {
+  positions: Float32Array | Uint16Array | ArrayLike<number>
+  positionsAreNormalized?: boolean
 }
 
 export interface SimulationSnapshot {
@@ -135,7 +136,7 @@ export interface SimulationSnapshot {
   particleCount: number
   resolvedSeed: number
   gridCellSize: number
-  particles: ParticleSnapshot[]
+  particles: ParticleSnapshotBuffer
   trailSegments: TrailSegmentSnapshot[]
 }
 

@@ -73,18 +73,6 @@ nlohmann::json SerializeObstacle(const ObstacleDefinition& obstacle) {
       obstacle);
 }
 
-nlohmann::json SerializeParticle(const Particle& particle) {
-  return {
-      {"position", SerializeVec2(particle.position)},
-      {"velocity", SerializeVec2(particle.velocity)},
-      {"radius", particle.radius},
-      {"mass", particle.mass},
-      {"restitution", particle.restitution},
-      {"color", SerializeColor(particle.color)},
-      {"streakEnabled", particle.streakEnabled},
-  };
-}
-
 nlohmann::json SerializeTrailSegment(const TrailSegment& trailSegment) {
   return {
       {"start", SerializeVec2(trailSegment.start)},
@@ -174,10 +162,20 @@ bool SimulationSession::Update(double frameTimeSeconds) {
 
 SimulationSceneSnapshot SimulationSession::GetSceneSnapshot() const {
   std::scoped_lock lock(mutex_);
+  std::vector<ParticleStyleSnapshot> particleStyles;
+  particleStyles.reserve(engine_.GetParticles().size());
+  for (const auto& particle : engine_.GetParticles()) {
+    particleStyles.push_back({
+        particle.radius,
+        particle.color,
+    });
+  }
+
   return {
       engine_.GetScenario(),
       engine_.GetResolvedSeed(),
       engine_.GetGridCellSize(),
+      std::move(particleStyles),
   };
 }
 
@@ -191,9 +189,28 @@ SimulationSnapshot SimulationSession::CaptureSnapshot() {
   snapshot.particleCount = engine_.GetParticleCount();
   snapshot.resolvedSeed = engine_.GetResolvedSeed();
   snapshot.gridCellSize = engine_.GetGridCellSize();
+  snapshot.boundsMin = engine_.GetScenario().geometry.bounds.min;
+  snapshot.boundsMax = engine_.GetScenario().geometry.bounds.max;
   snapshot.particles = engine_.GetParticles();
   snapshot.trailSegments = engine_.GetTrailSegments();
   return snapshot;
+}
+
+void SimulationSession::VisitSnapshot(const std::function<void(const SimulationSnapshotView&)>& visitor) {
+  std::scoped_lock lock(mutex_);
+  SimulationSnapshotView snapshot;
+  snapshot.sequence = nextSequence_++;
+  snapshot.simulationTime = simulationTime_;
+  snapshot.paused = paused_;
+  snapshot.speedMultiplier = speedMultiplier_;
+  snapshot.particleCount = engine_.GetParticleCount();
+  snapshot.resolvedSeed = engine_.GetResolvedSeed();
+  snapshot.gridCellSize = engine_.GetGridCellSize();
+  snapshot.boundsMin = engine_.GetScenario().geometry.bounds.min;
+  snapshot.boundsMax = engine_.GetScenario().geometry.bounds.max;
+  snapshot.particles = &engine_.GetParticles();
+  snapshot.trailSegments = &engine_.GetTrailSegments();
+  visitor(snapshot);
 }
 
 bool SimulationSession::IsPaused() const {
@@ -279,17 +296,36 @@ nlohmann::json SerializeScenarioToJson(const Scenario& scenario) {
 }
 
 nlohmann::json SerializeSceneSnapshotToJson(const SimulationSceneSnapshot& snapshot) {
+  nlohmann::json radii = nlohmann::json::array();
+  nlohmann::json colors = nlohmann::json::array();
+  radii.get_ref<nlohmann::json::array_t&>().reserve(snapshot.particleStyles.size());
+  colors.get_ref<nlohmann::json::array_t&>().reserve(snapshot.particleStyles.size() * 4);
+  for (const auto& particleStyle : snapshot.particleStyles) {
+    radii.push_back(particleStyle.radius);
+    colors.push_back(particleStyle.color.r);
+    colors.push_back(particleStyle.color.g);
+    colors.push_back(particleStyle.color.b);
+    colors.push_back(particleStyle.color.a);
+  }
+
   return {
       {"scenario", SerializeScenarioToJson(snapshot.scenario)},
       {"resolvedSeed", snapshot.resolvedSeed},
       {"gridCellSize", snapshot.gridCellSize},
+      {"particleStyles",
+       {
+           {"radii", std::move(radii)},
+           {"colors", std::move(colors)},
+       }},
   };
 }
 
 nlohmann::json SerializeSimulationSnapshotToJson(const SimulationSnapshot& snapshot) {
-  nlohmann::json particles = nlohmann::json::array();
+  nlohmann::json positions = nlohmann::json::array();
+  positions.get_ref<nlohmann::json::array_t&>().reserve(snapshot.particles.size() * 2);
   for (const auto& particle : snapshot.particles) {
-    particles.push_back(SerializeParticle(particle));
+    positions.push_back(particle.position.x);
+    positions.push_back(particle.position.y);
   }
 
   nlohmann::json trailSegments = nlohmann::json::array();
@@ -305,7 +341,10 @@ nlohmann::json SerializeSimulationSnapshotToJson(const SimulationSnapshot& snaps
       {"particleCount", snapshot.particleCount},
       {"resolvedSeed", snapshot.resolvedSeed},
       {"gridCellSize", snapshot.gridCellSize},
-      {"particles", std::move(particles)},
+      {"particles",
+       {
+           {"positions", std::move(positions)},
+       }},
       {"trailSegments", std::move(trailSegments)},
   };
 }

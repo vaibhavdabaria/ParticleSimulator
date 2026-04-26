@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <mutex>
 #include <optional>
 #include <string>
@@ -21,10 +22,16 @@ struct SimulationLaunchOptions {
   bool paused = false;
 };
 
+struct ParticleStyleSnapshot {
+  double radius = 4.0;
+  ColorRgba color{};
+};
+
 struct SimulationSceneSnapshot {
   Scenario scenario;
   std::uint32_t resolvedSeed = 0;
   double gridCellSize = 16.0;
+  std::vector<ParticleStyleSnapshot> particleStyles;
 };
 
 struct SimulationSnapshot {
@@ -35,8 +42,24 @@ struct SimulationSnapshot {
   std::size_t particleCount = 0;
   std::uint32_t resolvedSeed = 0;
   double gridCellSize = 16.0;
+  Vec2 boundsMin{};
+  Vec2 boundsMax{};
   std::vector<Particle> particles;
   std::vector<TrailSegment> trailSegments;
+};
+
+struct SimulationSnapshotView {
+  std::uint64_t sequence = 0;
+  double simulationTime = 0.0;
+  bool paused = false;
+  double speedMultiplier = 1.0;
+  std::size_t particleCount = 0;
+  std::uint32_t resolvedSeed = 0;
+  double gridCellSize = 16.0;
+  Vec2 boundsMin{};
+  Vec2 boundsMax{};
+  const std::vector<Particle>* particles = nullptr;
+  const std::vector<TrailSegment>* trailSegments = nullptr;
 };
 
 class SimulationSession {
@@ -52,6 +75,7 @@ class SimulationSession {
   [[nodiscard]] bool Update(double frameTimeSeconds);
   [[nodiscard]] SimulationSceneSnapshot GetSceneSnapshot() const;
   [[nodiscard]] SimulationSnapshot CaptureSnapshot();
+  void VisitSnapshot(const std::function<void(const SimulationSnapshotView&)>& visitor);
   [[nodiscard]] bool IsPaused() const;
   [[nodiscard]] double GetSpeedMultiplier() const;
 

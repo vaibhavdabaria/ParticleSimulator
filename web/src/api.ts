@@ -42,6 +42,68 @@ export function buildWebSocketUrl(sessionId: string): string {
   return `${protocol}//${window.location.host}/ws?sessionId=${encodeURIComponent(sessionId)}`
 }
 
-export function parseServerEvent(rawMessage: string): ServerEvent {
-  return JSON.parse(rawMessage) as ServerEvent
+const snapshotMagic = 0x33535350
+const snapshotHeaderBytes = 56
+
+export function parseServerEvent(rawMessage: string | ArrayBuffer): ServerEvent {
+  if (typeof rawMessage === 'string') {
+    return JSON.parse(rawMessage) as ServerEvent
+  }
+
+  return parseBinarySnapshot(rawMessage)
+}
+
+function parseBinarySnapshot(rawMessage: ArrayBuffer): ServerEvent {
+  const view = new DataView(rawMessage)
+  if (view.byteLength < snapshotHeaderBytes || view.getUint32(0, true) !== snapshotMagic) {
+    throw new Error('Received an unknown binary simulation message.')
+  }
+
+  const particleCount = view.getUint32(4, true)
+  const trailCount = view.getUint32(8, true)
+  const positionBytes = particleCount * 2 * Uint16Array.BYTES_PER_ELEMENT
+  const trailGeometryBytes = trailCount * 4 * Float32Array.BYTES_PER_ELEMENT
+  const trailColorBytes = trailCount * 4
+  const expectedBytes = snapshotHeaderBytes + positionBytes + trailGeometryBytes + trailColorBytes
+  if (view.byteLength < expectedBytes) {
+    throw new Error('Received a truncated binary simulation snapshot.')
+  }
+
+  const positions = new Uint16Array(rawMessage, snapshotHeaderBytes, particleCount * 2)
+  const trailGeometryOffset = snapshotHeaderBytes + positionBytes
+  const trailColorOffset = trailGeometryOffset + trailGeometryBytes
+  const trailGeometry = new Float32Array(rawMessage, trailGeometryOffset, trailCount * 4)
+  const trailColors = new Uint8Array(rawMessage, trailColorOffset, trailCount * 4)
+  const trailSegments = Array.from({ length: trailCount }, (_, index) => {
+    const geometryIndex = index * 4
+    const colorIndex = index * 4
+    return {
+      start: [trailGeometry[geometryIndex], trailGeometry[geometryIndex + 1]] as [number, number],
+      end: [trailGeometry[geometryIndex + 2], trailGeometry[geometryIndex + 3]] as [number, number],
+      color: [
+        trailColors[colorIndex],
+        trailColors[colorIndex + 1],
+        trailColors[colorIndex + 2],
+        trailColors[colorIndex + 3],
+      ] as [number, number, number, number],
+    }
+  })
+
+  return {
+    type: 'snapshot',
+    snapshot: {
+      particleCount,
+      resolvedSeed: view.getUint32(48, true),
+      paused: (view.getUint32(12, true) & 1) === 1,
+      sequence: view.getFloat64(16, true),
+      simulationTime: view.getFloat64(24, true),
+      speedMultiplier: view.getFloat64(32, true),
+      gridCellSize: view.getFloat64(40, true),
+      particles: {
+        positions,
+        positionsAreNormalized: true,
+      },
+      trailSegments,
+    },
+  }
 }
