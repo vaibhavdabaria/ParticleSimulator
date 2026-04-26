@@ -1,0 +1,88 @@
+{
+  "window": {
+    "width": 1360,
+    "height": 820,
+    "title": "Particle Simulator - Force Showcase",
+    "backgroundColor": [12, 16, 24, 255],
+    "targetFps": 60
+  },
+  "simulation": {
+    "timestep": 0.0083333333,
+    "seed": 42,
+    "collisionIterations": 2
+  },
+  "forces": [
+    {
+      "type": "gravity",
+      "acceleration": [0.0, 12.0]
+    },
+    {
+      "type": "drag",
+      "coefficient": 0.3
+    },
+    {
+      "type": "wind",
+      "acceleration": [2.0, 0.0]
+    },
+    {
+      "type": "radial",
+      "origin": [680.0, 380.0],
+      "strength": -120000.0,
+      "radius": 220.0
+    }
+  ],
+  "particleTypes": {
+    "ember": {
+      "radius": 4.0,
+      "mass": 1.0,
+      "restitution": 0.86,
+      "color": [255, 164, 74, 255],
+      "initialVelocity": [0.0, 0.0]
+    },
+    "ash": {
+      "radius": 3.0,
+      "mass": 0.8,
+      "restitution": 0.8,
+      "color": [200, 214, 232, 220],
+      "initialVelocity": [0.0, 0.0]
+    }
+  },
+  "spawnGroups": [
+    {
+      "particleType": "ember",
+      "count": 450,
+      "minPosition": [180.0, 100.0],
+      "maxPosition": [1180.0, 220.0],
+      "minVelocity": [-18.0, 0.0],
+      "maxVelocity": [18.0, 24.0]
+    },
+    {
+      "particleType": "ash",
+      "count": 250,
+      "minPosition": [260.0, 120.0],
+      "maxPosition": [1100.0, 280.0],
+      "minVelocity": [-12.0, -8.0],
+      "maxVelocity": [12.0, 8.0]
+    }
+  ],
+  "geometry": {
+    "bounds": {
+      "min": [0.0, 0.0],
+      "max": [1360.0, 820.0]
+    },
+    "obstacles": [
+      {
+        "type": "circle",
+        "center": [680.0, 410.0],
+        "radius": 80.0,
+        "restitution": 0.9
+      },
+      {
+        "type": "rectangle",
+        "position": [420.0, 520.0],
+        "size": [520.0, 24.0],
+        "restitution": 0.95
+      }
+    ]
+  }
+}

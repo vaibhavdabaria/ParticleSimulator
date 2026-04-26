@@ -1,0 +1,865 @@
+:root {
+  --ink-950: #101925;
+  --ink-900: #132131;
+  --ink-800: #1b2f45;
+  --ink-700: #264260;
+  --sand-100: #f7f1e7;
+  --sand-200: #e8dcc7;
+  --sand-300: #cfb68a;
+  --amber-400: #f0a33a;
+  --amber-500: #d97d19;
+  --teal-400: #57c7b6;
+  --rose-400: #ef8f72;
+  --line: rgba(255, 255, 255, 0.12);
+  --shadow: 0 18px 44px rgba(6, 12, 20, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.appShell {
+  min-height: 100vh;
+  padding: 28px;
+  color: var(--sand-100);
+  background:
+    radial-gradient(circle at top left, rgba(87, 199, 182, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(240, 163, 58, 0.22), transparent 32%),
+    linear-gradient(160deg, #0b1320 0%, #152538 48%, #101a28 100%);
+}
+
+.simplifiedShell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overflow-x: hidden;
+}
+
+.hero {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: linear-gradient(140deg, rgba(19, 33, 49, 0.92), rgba(10, 18, 28, 0.86));
+  box-shadow: var(--shadow);
+}
+
+.simplifiedHero {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 10px 14px;
+}
+
+.settingsHero {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.eyebrow,
+.panelKicker {
+  margin: 0 0 8px;
+  color: var(--sand-300);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.hero h1,
+.panel h2,
+.panel h3,
+.panel h4 {
+  margin: 0;
+  font-family: "Aptos Display", "Trebuchet MS", "Segoe UI", sans-serif;
+  font-weight: 700;
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 3.8vw, 4rem);
+  line-height: 0.95;
+  max-width: 13ch;
+}
+
+.heroText {
+  max-width: 60ch;
+  margin: 14px 0 0;
+  color: rgba(247, 241, 231, 0.78);
+  line-height: 1.6;
+}
+
+.simplifiedHero h1 {
+  font-size: clamp(1.2rem, 1.7vw, 1.85rem);
+  max-width: none;
+  white-space: nowrap;
+}
+
+.simplifiedHero .heroText {
+  margin-top: 2px;
+  max-width: 42ch;
+  font-size: 0.82rem;
+  line-height: 1.28;
+}
+
+.heroStats > div,
+.builderSummary > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.heroStats span,
+.metricPanel span,
+.fieldHint,
+.builderSummary span,
+.speedLabel {
+  color: rgba(247, 241, 231, 0.62);
+  font-size: 0.9rem;
+}
+
+.heroStats strong,
+.metricPanel strong,
+.builderSummary strong {
+  font-size: 1.08rem;
+}
+
+.panel,
+.viewerCanvasPanel {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(12, 20, 31, 0.82);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+
+.panel {
+  padding: 20px;
+}
+
+.panelHeader,
+.builderPane,
+.metricPanel {
+  display: grid;
+  gap: 14px;
+}
+
+.homeWorkspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.9fr) minmax(110px, 0.22fr);
+  gap: 14px;
+  align-items: start;
+  flex: 1;
+  min-height: 0;
+  grid-template-areas:
+    "controls controls"
+    "simulation builder";
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.simulationColumn,
+.builderSidebar,
+.settingsWorkspace {
+  display: grid;
+  gap: 12px;
+}
+
+.simulationColumn {
+  grid-area: simulation;
+  min-height: 0;
+}
+
+.settingsWorkspace {
+  max-width: 1200px;
+}
+
+.simulationControlsPanel {
+  grid-area: controls;
+  padding: 0;
+}
+
+.controlStrip,
+.actionStrip,
+.sectionActions,
+.speedCluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.controlStrip {
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+.transportCluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.playbackScenarioInfo {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  justify-items: center;
+  gap: 1px;
+}
+
+.playbackScenarioLabel {
+  color: rgba(247, 241, 231, 0.4);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.playbackScenarioValue {
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(247, 241, 231, 0.82);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.speedRail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.speedCluster {
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 5px;
+}
+
+.primaryButton,
+.secondaryButton,
+.dangerButton,
+.chipButton,
+.speedButton,
+.linkButton {
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    opacity 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+.primaryButton:hover,
+.secondaryButton:hover,
+.dangerButton:hover,
+.chipButton:hover,
+.speedButton:hover,
+.linkButton:hover {
+  transform: translateY(-1px);
+}
+
+.primaryButton {
+  padding: 12px 18px;
+  background: linear-gradient(135deg, var(--amber-400), var(--amber-500));
+  color: #231508;
+  font-weight: 700;
+}
+
+.secondaryButton,
+.dangerButton,
+.chipButton,
+.speedButton,
+.linkButton {
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--sand-100);
+}
+
+.dangerButton {
+  background: rgba(239, 143, 114, 0.18);
+  color: #ffd5ca;
+}
+
+.chipButton,
+.speedButton,
+.linkButton {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.speedButtonActive {
+  background: rgba(87, 199, 182, 0.18);
+  border-color: rgba(87, 199, 182, 0.42);
+  color: #e6fffb;
+}
+
+.transportButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(247, 241, 231, 0.9);
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+.transportButton:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.transportButtonPrimary {
+  background: rgba(240, 163, 58, 0.18);
+  border-color: rgba(240, 163, 58, 0.32);
+  color: rgba(255, 232, 201, 0.96);
+}
+
+.transportButtonPrimary:hover {
+  background: rgba(240, 163, 58, 0.24);
+  border-color: rgba(240, 163, 58, 0.4);
+}
+
+.speedRail .speedLabel {
+  white-space: nowrap;
+  font-size: 0.74rem;
+}
+
+.speedSlider {
+  width: 132px;
+  accent-color: var(--teal-400);
+  cursor: pointer;
+}
+
+.speedValue {
+  min-width: 2.3rem;
+  color: var(--sand-100);
+  font-size: 0.76rem;
+  text-align: right;
+}
+
+.linkButton {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.builderActionStack {
+  display: grid;
+  gap: 6px;
+}
+
+.builderToolbar {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.builderScenarioTray {
+  display: grid;
+  gap: 6px;
+  width: 124px;
+  max-height: 0;
+  padding: 0 8px;
+  overflow: hidden;
+  opacity: 0;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateY(-6px);
+  transition:
+    max-height 180ms ease,
+    opacity 160ms ease,
+    transform 180ms ease,
+    padding 180ms ease,
+    border-color 180ms ease;
+}
+
+.builderScenarioTrayOpen {
+  max-height: 120px;
+  padding: 8px;
+  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(0);
+}
+
+.builderScenarioTrayLabel {
+  color: rgba(247, 241, 231, 0.52);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.roundIconButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(247, 241, 231, 0.82);
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+.roundIconButton:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.roundIconButton::after,
+.builderRoundAction::after {
+  content: attr(data-label);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(9, 15, 24, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(247, 241, 231, 0.88);
+  font-size: 0.74rem;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.roundIconButton:hover::after,
+.builderRoundAction:hover::after {
+  opacity: 1;
+}
+
+.roundIconButton input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.iconGlyph {
+  font-size: 1rem;
+  line-height: 1;
+  font-weight: 600;
+}
+
+.iconSvg {
+  width: 16px;
+  height: 16px;
+}
+
+.builderScenarioSelect {
+  width: 100%;
+  min-width: 0;
+  font-size: 0.75rem;
+}
+
+.builderActionButton {
+  justify-content: center;
+  padding: 7px 9px;
+  font-size: 0.76rem;
+}
+
+.builderSidebar {
+  grid-area: builder;
+  position: sticky;
+  top: 20px;
+  align-self: start;
+}
+
+.builderPane {
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  justify-items: center;
+}
+
+.uploadButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.uploadButton input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.statusMessage,
+.validationEmpty,
+.emptyState {
+  margin: 0;
+  color: rgba(247, 241, 231, 0.72);
+  line-height: 1.35;
+  font-size: 0.78rem;
+}
+
+.playbackStatusMessage {
+  margin-top: 4px;
+}
+
+.validationPanel {
+  background: linear-gradient(180deg, rgba(24, 42, 62, 0.92), rgba(12, 20, 31, 0.92));
+}
+
+.validationHeader,
+.sectionHeader,
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.sectionHeader {
+  margin-bottom: 14px;
+}
+
+.sectionHeaderTight {
+  margin-top: 18px;
+}
+
+.statusOk {
+  color: var(--teal-400);
+}
+
+.statusWarn {
+  color: var(--amber-400);
+}
+
+.validationList {
+  margin: 14px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: #ffd9b2;
+}
+
+.formGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field,
+.vectorField,
+.colorField {
+  display: grid;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-size: 0.92rem;
+  color: rgba(247, 241, 231, 0.84);
+}
+
+.fieldHint {
+  line-height: 1.4;
+}
+
+.textInput {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--sand-100);
+  font-size: 0.82rem;
+}
+
+select.textInput {
+  color-scheme: dark;
+  appearance: none;
+  background:
+    linear-gradient(45deg, transparent 50%, rgba(247, 241, 231, 0.72) 50%),
+    linear-gradient(135deg, rgba(247, 241, 231, 0.72) 50%, transparent 50%),
+    rgba(255, 255, 255, 0.04);
+  background-position:
+    calc(100% - 18px) calc(50% - 2px),
+    calc(100% - 12px) calc(50% - 2px),
+    0 0;
+  background-size:
+    6px 6px,
+    6px 6px,
+    100% 100%;
+  background-repeat: no-repeat;
+  padding-right: 32px;
+}
+
+select.textInput option,
+select.textInput optgroup {
+  background: #132131;
+  color: var(--sand-100);
+}
+
+.builderRoundAction {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.builderRoundAction svg {
+  width: 18px;
+  height: 18px;
+}
+
+.textInput:focus {
+  outline: 2px solid rgba(87, 199, 182, 0.45);
+  border-color: rgba(87, 199, 182, 0.42);
+}
+
+.compactInput {
+  max-width: 220px;
+}
+
+.checkboxField {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.vectorInputs,
+.colorInputs,
+.colorRow {
+  display: grid;
+  gap: 10px;
+}
+
+.vectorInputs {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.colorRow {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.colorInputs {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.colorPicker {
+  width: 58px;
+  height: 48px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+}
+
+.cardStack {
+  display: grid;
+  gap: 14px;
+}
+
+.card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.viewerCanvasPanel {
+  position: relative;
+  padding: 14px;
+}
+
+.viewerCanvasPanelLarge {
+  height: 100%;
+  min-height: 0;
+}
+
+.viewerCanvas {
+  display: block;
+  width: 100%;
+  border-radius: 18px;
+  background: #0b1320;
+}
+
+.viewerCanvasLarge {
+  height: 100%;
+  min-height: 0;
+}
+
+.viewerOverlay {
+  position: absolute;
+  top: 26px;
+  left: 26px;
+  display: flex;
+  gap: 18px;
+  pointer-events: none;
+}
+
+.viewerOverlayItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.viewerOverlayItem span {
+  color: rgba(247, 241, 231, 0.38);
+  font-size: 0.84rem;
+}
+
+.viewerOverlayItem strong {
+  color: rgba(247, 241, 231, 0.5);
+  font-size: 0.96rem;
+  font-weight: 600;
+}
+
+.viewerGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.jsonPreview {
+  margin: 0;
+  overflow: auto;
+  max-height: 420px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(8, 13, 20, 0.82);
+  color: #dceef0;
+  line-height: 1.55;
+  font-family: "IBM Plex Mono", "Consolas", monospace;
+  font-size: 0.86rem;
+}
+
+@media (max-width: 1180px) {
+  .simplifiedHero,
+  .settingsHero,
+  .homeWorkspace {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "controls"
+      "simulation"
+      "builder";
+  }
+
+  .builderSidebar {
+    position: static;
+  }
+
+  .simplifiedShell {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .viewerCanvasPanelLarge,
+  .viewerCanvasLarge {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 760px) {
+  .appShell {
+    padding: 18px;
+  }
+
+  .formGrid,
+  .viewerGrid,
+  .colorInputs,
+  .colorRow {
+    grid-template-columns: 1fr;
+  }
+
+  .vectorInputs {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .controlStrip {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .speedRail {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .playbackScenarioInfo {
+    order: 3;
+    width: 100%;
+    justify-items: flex-start;
+  }
+
+  .speedCluster {
+    flex-wrap: wrap;
+  }
+
+  .speedSlider {
+    width: 100%;
+  }
+
+  .viewerOverlay {
+    top: 22px;
+    left: 22px;
+    flex-wrap: wrap;
+  }
+
+  .viewerCanvasPanelLarge,
+  .viewerCanvasLarge {
+    min-height: 320px;
+  }
+}

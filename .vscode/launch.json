@@ -1,0 +1,32 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Particle Simulator (Debug)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/particle_simulator.exe",
+            "args": [
+                "${workspaceFolder}/scenarios/${input:particleScenario}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "preLaunchTask": "particle-sim: build-debug"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "particleScenario",
+            "type": "pickString",
+            "description": "Choose a scenario to run",
+            "options": [
+                "minimal_zero_gravity.json",
+                "force_showcase.json",
+                "obstacle_course.json",
+                "stress_test.json"
+            ],
+            "default": "minimal_zero_gravity.json"
+        }
+    ]
+}

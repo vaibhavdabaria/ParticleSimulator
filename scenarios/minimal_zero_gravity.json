@@ -1,0 +1,47 @@
+{
+  "window": {
+    "width": 1280,
+    "height": 720,
+    "title": "Particle Simulator - Zero Gravity",
+    "backgroundColor": [13, 18, 28, 255],
+    "targetFps": 60
+  },
+  "simulation": {
+    "timestep": 0.0083333333,
+    "seed": 7,
+    "collisionIterations": 2
+  },
+  "particleTypes": {
+    "dust": {
+      "radius": 4.5,
+      "mass": 1.0,
+      "restitution": 1.0,
+      "color": [245, 231, 184, 255],
+      "initialVelocity": [0.0, 0.0]
+    }
+  },
+  "spawnGroups": [
+    {
+      "particleType": "dust",
+      "count": 300,
+      "minPosition": [0.0, 0.0],
+      "maxPosition": [40.0, 60.0],
+      "minVelocity": [-20.0, -20.0],
+      "maxVelocity": [20.0, 20.0]
+    }
+  ],
+  "geometry": {
+    "bounds": {
+      "min": [0.0, 0.0],
+      "max": [1280.0, 720.0]
+    },
+    "obstacles": [
+      {
+        "type": "rectangle",
+        "position": [580.0, 300.0],
+        "size": [120.0, 28.0],
+        "restitution": 0.95
+      }
+    ]
+  }
+}

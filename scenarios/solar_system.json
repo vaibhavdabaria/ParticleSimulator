@@ -1,0 +1,59 @@
+{
+  "window": {
+    "width": 1360,
+    "height": 820,
+    "title": "Particle Simulator - Solar System",
+    "backgroundColor": [12, 16, 24, 255],
+    "targetFps": 60
+  },
+  "simulation": {
+    "timestep": 0.0083333333,
+    "seed": 42,
+    "collisionIterations": 2
+  },
+  "forces": [
+    {
+      "type": "radial",
+      "origin": [1750.0, 1100.0],
+      "strength": 1500000.0,
+      "radius": 2500.0
+    }
+  ],
+
+  "particleTypes": {
+    "earth": {
+      "radius": 4.0,
+      "mass": 1.0,
+      "restitution": 0.86,
+      "color": [255, 164, 74, 255],
+      "initialVelocity": [0.0, 0.0]
+    }
+  },
+
+    "spawnGroups": [
+    {
+      "particleType": "earth",
+      "count": 1,
+      "minPosition": [1000.0, 950.0],
+      "maxPosition": [1000.0, 950.0],
+      "minVelocity": [18.0, 30.0],
+      "maxVelocity": [36.0, 60.0],
+      "streakEnabled": true
+    }
+  ],
+
+  "geometry": {
+    "bounds": {
+      "min": [0.0, 0.0],
+      "max": [3500.0, 2200.0]
+    },
+    "obstacles": [
+      {
+        "type": "circle",
+        "center": [1750.0, 1100.0],
+        "radius": 50.0,
+        "restitution": 0.9
+      }
+    ]
+   }
+}

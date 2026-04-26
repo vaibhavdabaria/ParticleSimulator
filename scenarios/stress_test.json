@@ -1,0 +1,70 @@
+{
+  "window": {
+    "width": 1600,
+    "height": 900,
+    "title": "Particle Simulator - Stress Test",
+    "backgroundColor": [9, 12, 18, 255],
+    "targetFps": 60
+  },
+  "simulation": {
+    "timestep": 0.0083333333,
+    "seed": 1234,
+    "collisionIterations": 2,
+    "gridCellSize": 10.0
+  },
+  "forces": [
+    {
+      "type": "gravity",
+      "acceleration": [0.0, 6.5]
+    },
+    {
+      "type": "drag",
+      "coefficient": 0.08
+    }
+  ],
+  "particleTypes": {
+    "micro": {
+      "radius": 3.2,
+      "mass": 0.7,
+      "restitution": 0.78,
+      "color": [125, 240, 190, 235],
+      "initialVelocity": [0.0, 0.0]
+    }
+  },
+  "spawnGroups": [
+    {
+      "particleType": "micro",
+      "count": 10000,
+      "minPosition": [30.0, 30.0],
+      "maxPosition": [1570.0, 360.0],
+      "minVelocity": [-16.0, -5.0],
+      "maxVelocity": [16.0, 5.0]
+    }
+  ],
+  "geometry": {
+    "bounds": {
+      "min": [0.0, 0.0],
+      "max": [1600.0, 900.0]
+    },
+    "obstacles": [
+      {
+        "type": "rectangle",
+        "position": [240.0, 520.0],
+        "size": [1120.0, 28.0],
+        "restitution": 0.86
+      },
+      {
+        "type": "circle",
+        "center": [480.0, 720.0],
+        "radius": 70.0,
+        "restitution": 0.84
+      },
+      {
+        "type": "circle",
+        "center": [1120.0, 710.0],
+        "radius": 78.0,
+        "restitution": 0.84
+      }
+    ]
+  }
+}

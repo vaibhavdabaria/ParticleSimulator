@@ -1,0 +1,75 @@
+{
+  "window": {
+    "width": 1280,
+    "height": 780,
+    "title": "Particle Simulator - Obstacle Course",
+    "backgroundColor": [10, 13, 18, 255],
+    "targetFps": 60
+  },
+  "simulation": {
+    "timestep": 0.0083333333,
+    "seed": 99,
+    "collisionIterations": 3
+  },
+  "forces": [
+    {
+      "type": "gravity",
+      "acceleration": [0.0, 16.0]
+    },
+    {
+      "type": "drag",
+      "coefficient": 0.18
+    }
+  ],
+  "particleTypes": {
+    "ball": {
+      "radius": 5.0,
+      "mass": 1.4,
+      "restitution": 0.82,
+      "color": [88, 204, 255, 255],
+      "initialVelocity": [0.0, 0.0]
+    }
+  },
+  "spawnGroups": [
+    {
+      "particleType": "ball",
+      "count": 500,
+      "minPosition": [120.0, 80.0],
+      "maxPosition": [1160.0, 180.0],
+      "minVelocity": [-10.0, -2.0],
+      "maxVelocity": [10.0, 4.0]
+    }
+  ],
+  "geometry": {
+    "bounds": {
+      "min": [0.0, 0.0],
+      "max": [1280.0, 780.0]
+    },
+    "obstacles": [
+      {
+        "type": "rectangle",
+        "position": [150.0, 240.0],
+        "size": [280.0, 24.0],
+        "restitution": 0.92
+      },
+      {
+        "type": "rectangle",
+        "position": [620.0, 360.0],
+        "size": [420.0, 24.0],
+        "restitution": 0.92
+      },
+      {
+        "type": "circle",
+        "center": [560.0, 520.0],
+        "radius": 70.0,
+        "restitution": 0.9
+      },
+      {
+        "type": "circle",
+        "center": [940.0, 600.0],
+        "radius": 64.0,
+        "restitution": 0.9
+      }
+    ]
+  }
+}

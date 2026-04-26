@@ -1,0 +1,110 @@
+{
+  "window": {
+    "width": 1500,
+    "height": 1000,
+    "title": "Particle Simulator - Oscillator",
+    "backgroundColor": [12, 16, 24, 255],
+    "targetFps": 60
+  },
+
+  "simulation": {
+    "timestep": 0.0083333333,
+    "seed": 42,
+    "collisionIterations": 2
+  },
+
+  "forces": [
+    {
+      "type": "radial",
+      "origin": [750.0, 500.0],
+      "strength": 30000.0,
+      "radius": 2500.0
+    }
+  ],
+
+  "particleTypes": {
+    "mercury": {
+      "radius": 3.0,
+      "mass": 0.01,
+      "restitution": 0.86,
+      "color": [122, 106, 79, 255],
+      "initialVelocity": [0.0, 0.0]
+    },
+    "venus": {
+      "radius": 4.0,
+      "mass": 0.01,
+      "restitution": 0.86,
+      "color": [255, 255, 224, 255],
+      "initialVelocity": [0.0, 0.0]
+    },
+    "mars": {
+      "radius": 7.0,
+      "mass": 0.01,
+      "restitution": 0.86,
+      "color": [255, 0, 0, 255],
+      "initialVelocity": [0.0, 0.0]
+    },
+    "earth": {
+      "radius": 8.0,
+      "mass": 0.01,
+      "restitution": 0.86,
+      "color": [0, 0, 255, 255],
+      "initialVelocity": [0.0, 0.0]
+    }
+  },
+
+  "spawnGroups": [
+    {
+      "particleType": "mercury",
+      "count": 1,
+      "minPosition": [750.0, 350.0],
+      "maxPosition": [750.0, 350.0],
+      "minVelocity": [10.0, 0.0],
+      "maxVelocity": [10.0, 0.0],
+      "streakEnabled": true
+    },
+    {
+      "particleType": "venus",
+      "count": 1,
+      "minPosition": [750.0, 325.0],
+      "maxPosition": [750.0, 325.0],
+      "minVelocity": [10.0, 0.0],
+      "maxVelocity": [10.0, 0.0],
+      "streakEnabled": true
+    },
+    {
+      "particleType": "mars",
+      "count": 1,
+      "minPosition": [750.0, 300.0],
+      "maxPosition": [750.0, 300.0],
+      "minVelocity": [10.0, 0.0],
+      "maxVelocity": [10.0, 0.0],
+      "streakEnabled": true
+    },
+    {
+      "particleType": "earth",
+      "count": 1,
+      "minPosition": [750.0, 250.0],
+      "maxPosition": [750.0, 250.0],
+      "minVelocity": [10.0, 0.0],
+      "maxVelocity": [10.0, 0.0],
+      "streakEnabled": true
+    }
+  ],
+
+  "geometry": {
+    "bounds": {
+      "min": [0.0, 0.0],
+      "max": [1500.0, 1000.0]
+    },
+
+    "obstacles": [
+      {
+        "type": "circle",
+        "center": [750.0, 500.0],
+        "radius": 20.0,
+        "restitution": 1.0
+      }
+    ]
+   }
+}
