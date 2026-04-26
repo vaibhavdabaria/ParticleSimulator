@@ -170,13 +170,6 @@ function normalizeSpawnGroup(value: unknown, particleType: string): SpawnGroupDe
     maxPosition: coerceVec2(value.maxPosition, fallback.maxPosition),
     minVelocity: coerceVec2(value.minVelocity, fallback.minVelocity),
     maxVelocity: coerceVec2(value.maxVelocity, fallback.maxVelocity),
-    radius: value.radius === undefined ? undefined : coerceNumber(value.radius, fallback.radius ?? 4),
-    mass: value.mass === undefined ? undefined : coerceNumber(value.mass, fallback.mass ?? 1),
-    restitution:
-      value.restitution === undefined
-        ? undefined
-        : coerceNumber(value.restitution, fallback.restitution ?? 0.85),
-    color: value.color === undefined ? undefined : coerceColor(value.color, [255, 255, 255, 255]),
     streakEnabled: coerceBoolean(value.streakEnabled, false),
   }
 }
@@ -325,18 +318,6 @@ export function validateScenario(scenario: Scenario): string[] {
     }
     if (group.count <= 0) {
       errors.push(`Spawn group ${index + 1} count must be positive.`)
-    }
-    if (group.radius !== undefined && group.radius <= 0) {
-      errors.push(`Spawn group ${index + 1} radius override must be positive.`)
-    }
-    if (group.mass !== undefined && group.mass <= 0) {
-      errors.push(`Spawn group ${index + 1} mass override must be positive.`)
-    }
-    if (group.restitution !== undefined && (group.restitution < 0 || group.restitution > 1)) {
-      errors.push(`Spawn group ${index + 1} restitution override must be between 0 and 1.`)
-    }
-    if (group.color) {
-      validateColor(`Spawn group ${index + 1} color`, group.color, errors)
     }
   })
 

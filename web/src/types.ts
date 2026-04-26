@@ -48,10 +48,6 @@ export interface SpawnGroupDefinition {
   maxPosition: Vec2
   minVelocity: Vec2
   maxVelocity: Vec2
-  radius?: number
-  mass?: number
-  restitution?: number
-  color?: ColorRgba
   streakEnabled: boolean
 }
 

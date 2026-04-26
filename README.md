@@ -194,8 +194,7 @@ A minimal valid file can omit `window` and `forces`, but it must still define at
       "minPosition": [300.0, 60.0],
       "maxPosition": [980.0, 120.0],
       "minVelocity": [-4.0, 0.0],
-      "maxVelocity": [4.0, 6.0],
-      "restitution": 0.6
+      "maxVelocity": [4.0, 6.0]
     }
   ],
   "geometry": {
@@ -374,7 +373,7 @@ Optional field:
 Notes:
 
 - `restitution` controls bounce. `1.0` is very bouncy, `0.0` is no bounce.
-- These values become defaults for any spawn group that references the type.
+- Spawn groups do not override these particle properties. Define another particle type when a group needs a different radius, mass, restitution, color, or initial velocity.
 
 Example:
 
@@ -405,14 +404,11 @@ Optional fields:
 
 - `minVelocity` - `[x, y]`, default `[0.0, 0.0]`
 - `maxVelocity` - `[x, y]`, default `[0.0, 0.0]`
-- `radius` - positive number override
-- `mass` - positive number override
-- `restitution` - number from `0.0` to `1.0` override
-- `color` - color override
 - `streakEnabled` - boolean, default `false`
 
 Notes:
 
+- Radius, mass, restitution, color, and initial velocity always come from the referenced `particleTypes` entry.
 - Positions are randomized independently between `minPosition` and `maxPosition`.
 - Velocity is randomized between `minVelocity` and `maxVelocity`, then added to the particle type's `initialVelocity`.
 - Use identical min and max values when you want an exact position or velocity instead of a range.

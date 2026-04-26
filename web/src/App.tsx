@@ -1022,7 +1022,7 @@ function AdditionalSettingsPage({
                     }
                   />
                   <NumberField
-                    label="Restitution"
+                    label="Coefficient of Restitution"
                     value={particleType.restitution}
                     min={0}
                     step={0.01}
@@ -1037,7 +1037,7 @@ function AdditionalSettingsPage({
                     }
                   />
                   <Vec2Field
-                    label="Initial Velocity"
+                    label="Initial Velocity (X and Y component)"
                     value={particleType.initialVelocity}
                     onChange={(value) =>
                       updateDraft({
@@ -1137,46 +1137,6 @@ function AdditionalSettingsPage({
                       })
                     }
                   />
-                  <OptionalNumberField
-                    label="Radius Override"
-                    value={group.radius}
-                    min={0.000001}
-                    onChange={(value) =>
-                      updateDraft({
-                        ...draft,
-                        spawnGroups: draft.spawnGroups.map((item, itemIndex) =>
-                          itemIndex === index ? { ...group, radius: value } : item,
-                        ),
-                      })
-                    }
-                  />
-                  <OptionalNumberField
-                    label="Mass Override"
-                    value={group.mass}
-                    min={0.000001}
-                    onChange={(value) =>
-                      updateDraft({
-                        ...draft,
-                        spawnGroups: draft.spawnGroups.map((item, itemIndex) =>
-                          itemIndex === index ? { ...group, mass: value } : item,
-                        ),
-                      })
-                    }
-                  />
-                  <OptionalNumberField
-                    label="Restitution Override"
-                    value={group.restitution}
-                    min={0}
-                    step={0.01}
-                    onChange={(value) =>
-                      updateDraft({
-                        ...draft,
-                        spawnGroups: draft.spawnGroups.map((item, itemIndex) =>
-                          itemIndex === index ? { ...group, restitution: value } : item,
-                        ),
-                      })
-                    }
-                  />
                 </div>
                 <div className="formGrid">
                   <Vec2Field
@@ -1228,18 +1188,6 @@ function AdditionalSettingsPage({
                     }
                   />
                 </div>
-                <ColorField
-                  label="Optional Color Override"
-                  value={group.color ?? [255, 255, 255, 255]}
-                  onChange={(value) =>
-                    updateDraft({
-                      ...draft,
-                      spawnGroups: draft.spawnGroups.map((item, itemIndex) =>
-                        itemIndex === index ? { ...group, color: value } : item,
-                      ),
-                    })
-                  }
-                />
                 <CheckboxField
                   label="Leave permanent streaks"
                   checked={group.streakEnabled}
@@ -1378,7 +1326,7 @@ function AdditionalSettingsPage({
                       }
                     />
                     <OptionalNumberField
-                      label="Restitution"
+                      label="Coefficient of Restitution"
                       value={obstacle.restitution}
                       min={0}
                       step={0.01}
@@ -1429,7 +1377,7 @@ function AdditionalSettingsPage({
                       }
                     />
                     <OptionalNumberField
-                      label="Restitution"
+                      label="Coefficient of Restitution"
                       value={obstacle.restitution}
                       min={0}
                       step={0.01}

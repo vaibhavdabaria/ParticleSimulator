@@ -41,11 +41,6 @@ double ComputeDefaultGridCellSize(const Scenario& scenario) {
     (void)name;
     maxRadius = std::max(maxRadius, particleType.radius);
   }
-  for (const auto& group : scenario.spawnGroups) {
-    if (group.radius) {
-      maxRadius = std::max(maxRadius, *group.radius);
-    }
-  }
   return std::max(12.0, maxRadius * 2.5);
 }
 
@@ -242,11 +237,10 @@ void SimulationEngine::BuildInitialParticles() {
       particle.position = RandomVec2(generator, group.minPosition, group.maxPosition);
       particle.velocity = definition.initialVelocity + RandomVec2(generator, group.minVelocity, group.maxVelocity);
 
-      // Spawn-group values override particle-type defaults when present.
-      particle.radius = group.radius.value_or(definition.radius);
-      particle.mass = group.mass.value_or(definition.mass);
-      particle.restitution = group.restitution.value_or(definition.restitution);
-      particle.color = group.color.value_or(definition.color);
+      particle.radius = definition.radius;
+      particle.mass = definition.mass;
+      particle.restitution = definition.restitution;
+      particle.color = definition.color;
       particle.streakEnabled = group.streakEnabled;
 
       if (particle.radius <= 0.0 || particle.mass <= 0.0) {

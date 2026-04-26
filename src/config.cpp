@@ -260,21 +260,6 @@ SpawnGroupDefinition ReadSpawnGroup(const json& node, const std::string& path) {
   group.minVelocity = object.contains("minVelocity") ? ReadVec2(object.at("minVelocity"), path + ".minVelocity") : Vec2{};
   group.maxVelocity = object.contains("maxVelocity") ? ReadVec2(object.at("maxVelocity"), path + ".maxVelocity") : Vec2{};
 
-  if (object.contains("radius")) {
-    group.radius = ReadPositiveDouble(object.at("radius"), path + ".radius");
-  }
-  if (object.contains("mass")) {
-    group.mass = ReadPositiveDouble(object.at("mass"), path + ".mass");
-  }
-  if (object.contains("restitution")) {
-    group.restitution = ReadNonNegativeDouble(object.at("restitution"), path + ".restitution");
-    if (*group.restitution > 1.0) {
-      throw std::runtime_error("Expected '" + path + ".restitution' to be between 0 and 1.");
-    }
-  }
-  if (object.contains("color")) {
-    group.color = ReadColor(object.at("color"), path + ".color");
-  }
   if (object.contains("streakEnabled")) {
     group.streakEnabled = ReadBool(object.at("streakEnabled"), path + ".streakEnabled");
   }

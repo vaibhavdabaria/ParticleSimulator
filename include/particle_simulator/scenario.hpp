@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <optional>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -78,10 +77,6 @@ struct SpawnGroupDefinition {
   Vec2 maxPosition{};
   Vec2 minVelocity{};
   Vec2 maxVelocity{};
-  std::optional<double> radius;
-  std::optional<double> mass;
-  std::optional<double> restitution;
-  std::optional<ColorRgba> color;
   bool streakEnabled = false;
 };
 

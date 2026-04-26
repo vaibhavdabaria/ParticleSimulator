@@ -246,18 +246,6 @@ nlohmann::json SerializeScenarioToJson(const Scenario& scenario) {
         {"maxVelocity", SerializeVec2(group.maxVelocity)},
         {"streakEnabled", group.streakEnabled},
     };
-    if (group.radius) {
-      entry["radius"] = *group.radius;
-    }
-    if (group.mass) {
-      entry["mass"] = *group.mass;
-    }
-    if (group.restitution) {
-      entry["restitution"] = *group.restitution;
-    }
-    if (group.color) {
-      entry["color"] = SerializeColor(*group.color);
-    }
     spawnGroups.push_back(std::move(entry));
   }
 
