@@ -1,4 +1,4 @@
 build/
 .vs/
 out/
-run_web_app
+run_web_app.ps1
