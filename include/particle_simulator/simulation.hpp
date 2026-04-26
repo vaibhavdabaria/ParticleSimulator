@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <unordered_map>
 #include <vector>
 
 #include "particle_simulator/scenario.hpp"
@@ -38,11 +37,6 @@ struct CellCoord {
   }
 };
 
-// Hash support so CellCoord can be used as a key in unordered_map.
-struct CellCoordHash {
-  std::size_t operator()(const CellCoord& cell) const;
-};
-
 // Owns the simulation state, including the original scenario, the generated
 // initial particle set, and the current live particle array.
 class SimulationEngine {
@@ -70,10 +64,16 @@ class SimulationEngine {
   std::vector<Particle> particles_;
   std::vector<TrailSegment> trailSegments_;
   std::vector<Vec2> previousPositions_;
-  std::unordered_map<CellCoord, std::vector<std::size_t>, CellCoordHash> grid_;
+  std::size_t gridColumns_ = 1;
+  std::size_t gridRows_ = 1;
+  std::vector<std::size_t> gridHeads_;
+  std::vector<std::size_t> gridNext_;
 
   // Expand spawn groups into concrete particles using the resolved random seed.
   void BuildInitialParticles();
+
+  // Prepare dense broad-phase storage from the scenario bounds and particle count.
+  void BuildCollisionGridStorage();
 
   // Apply external forces and integrate velocity/position.
   void Integrate(double dt);

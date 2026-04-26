@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <random>
 #include <stdexcept>
 #include <type_traits>
@@ -13,6 +14,8 @@
 namespace particle_simulator {
 
 namespace {
+
+constexpr std::size_t kInvalidParticleIndex = std::numeric_limits<std::size_t>::max();
 
 // Random helpers are used only during initial particle generation.
 double RandomBetween(std::mt19937& generator, double min, double max) {
@@ -46,12 +49,28 @@ double ComputeDefaultGridCellSize(const Scenario& scenario) {
   return std::max(12.0, maxRadius * 2.5);
 }
 
-// Convert world position into a broad-phase collision cell.
-CellCoord ComputeCell(const Vec2& position, double cellSize) {
+std::size_t ComputeGridDimension(double min, double max, double cellSize) {
+  const double span = std::max(0.0, max - min);
+  return std::max<std::size_t>(1, static_cast<std::size_t>(std::ceil(span / cellSize)));
+}
+
+// Convert world position into a clamped broad-phase collision cell.
+CellCoord ComputeCell(
+    const Vec2& position,
+    const BoundsDefinition& bounds,
+    double cellSize,
+    std::size_t columns,
+    std::size_t rows) {
+  const int maxColumn = static_cast<int>(columns - 1);
+  const int maxRow = static_cast<int>(rows - 1);
   return {
-      static_cast<int>(std::floor(position.x / cellSize)),
-      static_cast<int>(std::floor(position.y / cellSize)),
+      std::clamp(static_cast<int>(std::floor((position.x - bounds.min.x) / cellSize)), 0, maxColumn),
+      std::clamp(static_cast<int>(std::floor((position.y - bounds.min.y) / cellSize)), 0, maxRow),
   };
+}
+
+std::size_t CellIndex(const CellCoord& cell, std::size_t columns) {
+  return static_cast<std::size_t>(cell.y) * columns + static_cast<std::size_t>(cell.x);
 }
 
 // Combine all active forces into one acceleration vector for a particle.
@@ -128,12 +147,6 @@ void ResolveParticlePair(Particle& first, Particle& second) {
 
 }  // namespace
 
-std::size_t CellCoordHash::operator()(const CellCoord& cell) const {
-  const std::uint64_t ux = static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell.x));
-  const std::uint64_t uy = static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell.y));
-  return static_cast<std::size_t>((ux << 32U) ^ uy);
-}
-
 SimulationEngine::SimulationEngine(Scenario scenario) : scenario_(std::move(scenario)) {
   // Resolve all scenario-driven startup settings once so runtime stepping can
   // stay focused purely on simulation work.
@@ -146,7 +159,7 @@ void SimulationEngine::Reset() {
   particles_ = initialParticles_;
   trailSegments_.clear();
   previousPositions_.resize(particles_.size());
-  grid_.reserve(particles_.size());
+  BuildCollisionGridStorage();
 }
 
 void SimulationEngine::Step(double dt) {
@@ -249,6 +262,14 @@ void SimulationEngine::BuildInitialParticles() {
   }
 }
 
+void SimulationEngine::BuildCollisionGridStorage() {
+  const auto& bounds = scenario_.geometry.bounds;
+  gridColumns_ = ComputeGridDimension(bounds.min.x, bounds.max.x, gridCellSize_);
+  gridRows_ = ComputeGridDimension(bounds.min.y, bounds.max.y, gridCellSize_);
+  gridHeads_.assign(gridColumns_ * gridRows_, kInvalidParticleIndex);
+  gridNext_.resize(particles_.size(), kInvalidParticleIndex);
+}
+
 void SimulationEngine::Integrate(double dt) {
   // Semi-implicit Euler integration is simple, fast, and good enough for this
   // style of real-time particle sandbox.
@@ -262,6 +283,7 @@ void SimulationEngine::Integrate(double dt) {
 void SimulationEngine::ResolveCollisions() {
   const int iterations = std::max(1, scenario_.simulation.collisionIterations);
   const std::array<int, 3> offsets{-1, 0, 1};
+  const auto& bounds = scenario_.geometry.bounds;
 
   for (int iteration = 0; iteration < iterations; ++iteration) {
     // First resolve interactions against the static world.
@@ -277,25 +299,30 @@ void SimulationEngine::ResolveCollisions() {
     }
 
     // Then rebuild the broad-phase grid from the updated particle positions.
-    grid_.clear();
+    std::fill(gridHeads_.begin(), gridHeads_.end(), kInvalidParticleIndex);
     for (std::size_t index = 0; index < particles_.size(); ++index) {
-      grid_[ComputeCell(particles_[index].position, gridCellSize_)].push_back(index);
+      const CellCoord cell = ComputeCell(particles_[index].position, bounds, gridCellSize_, gridColumns_, gridRows_);
+      const std::size_t headIndex = CellIndex(cell, gridColumns_);
+      gridNext_[index] = gridHeads_[headIndex];
+      gridHeads_[headIndex] = index;
     }
 
     // Each particle checks only its own cell and the immediate neighbors.
     // That dramatically reduces the number of pair checks compared to
     // a naive all-pairs O(n^2) scan.
     for (std::size_t index = 0; index < particles_.size(); ++index) {
-      const CellCoord cell = ComputeCell(particles_[index].position, gridCellSize_);
+      const CellCoord cell = ComputeCell(particles_[index].position, bounds, gridCellSize_, gridColumns_, gridRows_);
       for (int offsetX : offsets) {
         for (int offsetY : offsets) {
           const CellCoord neighbor{cell.x + offsetX, cell.y + offsetY};
-          const auto iterator = grid_.find(neighbor);
-          if (iterator == grid_.end()) {
+          if (neighbor.x < 0 || neighbor.y < 0 || neighbor.x >= static_cast<int>(gridColumns_) ||
+              neighbor.y >= static_cast<int>(gridRows_)) {
             continue;
           }
 
-          for (const std::size_t otherIndex : iterator->second) {
+          for (std::size_t otherIndex = gridHeads_[CellIndex(neighbor, gridColumns_)];
+               otherIndex != kInvalidParticleIndex;
+               otherIndex = gridNext_[otherIndex]) {
             if (otherIndex <= index) {
               continue;
             }
