@@ -7,7 +7,7 @@ namespace particle_simulator {
 
 namespace {
 
-// Options like --width and --seed require a following value. This helper keeps
+// Options like --width require a following value. This helper keeps
 // the main parser loop readable and centralizes the error message.
 std::string RequireValue(int argc, char** argv, int& index, const std::string& optionName) {
   if (index + 1 >= argc) {
@@ -54,11 +54,6 @@ CommandLineOptions ParseCommandLine(int argc, char** argv) {
       continue;
     }
 
-    if (argument == "--seed") {
-      options.seed = static_cast<std::uint32_t>(std::stoul(RequireValue(argc, argv, index, argument)));
-      continue;
-    }
-
     if (argument == "--paused") {
       options.paused = true;
       continue;
@@ -98,7 +93,7 @@ CommandLineOptions ParseCommandLine(int argc, char** argv) {
 std::string BuildUsage(const std::string& programName) {
   // Keep the usage output short enough to fit comfortably on one console line.
   return "Usage: " + programName + " <scenario.json> [--width <px>] [--height <px>] [--speed <multiplier>] "
-         "[--seed <value>] [--paused]";
+         "[--paused]";
 }
 
 }  // namespace particle_simulator

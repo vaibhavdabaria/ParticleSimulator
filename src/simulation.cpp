@@ -7,32 +7,12 @@
 #include <random>
 #include <stdexcept>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
 namespace particle_simulator {
 
 namespace {
-
-// Grid cell coordinate used by the broad-phase collision structure.
-struct CellCoord {
-  int x = 0;
-  int y = 0;
-
-  bool operator==(const CellCoord& other) const {
-    return x == other.x && y == other.y;
-  }
-};
-
-// Hash support so CellCoord can be used as a key in unordered_map.
-struct CellCoordHash {
-  std::size_t operator()(const CellCoord& cell) const {
-    const std::uint64_t ux = static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell.x));
-    const std::uint64_t uy = static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell.y));
-    return static_cast<std::size_t>((ux << 32U) ^ uy);
-  }
-};
 
 // Random helpers are used only during initial particle generation.
 double RandomBetween(std::mt19937& generator, double min, double max) {
@@ -50,8 +30,8 @@ Vec2 RandomVec2(std::mt19937& generator, const Vec2& min, const Vec2& max) {
   };
 }
 
-// If the user does not specify a grid size, derive one from the largest
-// particle radius so the broad-phase stays reasonably efficient by default.
+// Derive the grid size from the largest particle radius so the broad-phase
+// stays reasonably efficient without requiring scenario authors to tune it.
 double ComputeDefaultGridCellSize(const Scenario& scenario) {
   double maxRadius = 4.0;
   for (const auto& [name, particleType] : scenario.particleTypes) {
@@ -148,10 +128,16 @@ void ResolveParticlePair(Particle& first, Particle& second) {
 
 }  // namespace
 
+std::size_t CellCoordHash::operator()(const CellCoord& cell) const {
+  const std::uint64_t ux = static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell.x));
+  const std::uint64_t uy = static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell.y));
+  return static_cast<std::size_t>((ux << 32U) ^ uy);
+}
+
 SimulationEngine::SimulationEngine(Scenario scenario) : scenario_(std::move(scenario)) {
   // Resolve all scenario-driven startup settings once so runtime stepping can
   // stay focused purely on simulation work.
-  gridCellSize_ = scenario_.simulation.gridCellSize.value_or(ComputeDefaultGridCellSize(scenario_));
+  gridCellSize_ = ComputeDefaultGridCellSize(scenario_);
   BuildInitialParticles();
   Reset();
 }
@@ -159,6 +145,8 @@ SimulationEngine::SimulationEngine(Scenario scenario) : scenario_(std::move(scen
 void SimulationEngine::Reset() {
   particles_ = initialParticles_;
   trailSegments_.clear();
+  previousPositions_.resize(particles_.size());
+  grid_.reserve(particles_.size());
 }
 
 void SimulationEngine::Step(double dt) {
@@ -170,10 +158,10 @@ void SimulationEngine::Step(double dt) {
 
   // Streaks are defined by the particle's full movement over this simulation
   // step, including any position correction caused by collisions.
-  std::vector<Vec2> previousPositions;
-  previousPositions.reserve(particles_.size());
+  std::size_t index = 0;
   for (const auto& particle : particles_) {
-    previousPositions.push_back(particle.position);
+    previousPositions_[index] = particle.position;
+    index++;
   }
 
   Integrate(dt);
@@ -185,7 +173,7 @@ void SimulationEngine::Step(double dt) {
       continue;
     }
 
-    const Vec2& start = previousPositions[index];
+    const Vec2& start = previousPositions_[index];
     const Vec2& end = particle.position;
     if (LengthSquared(end - start) <= 1e-10) {
       continue;
@@ -220,9 +208,9 @@ double SimulationEngine::GetGridCellSize() const {
 }
 
 void SimulationEngine::BuildInitialParticles() {
-  // Use either the scenario-provided seed or a fixed fallback so the same
-  // scenario file remains reproducible.
-  resolvedSeed_ = scenario_.simulation.seed.value_or(5489U);
+  // Seed is derived from target FPS during scenario loading so the same
+  // scenario remains reproducible without a separate seed setting.
+  resolvedSeed_ = scenario_.simulation.seed;
   std::mt19937 generator(resolvedSeed_);
 
   initialParticles_.clear();
@@ -289,10 +277,9 @@ void SimulationEngine::ResolveCollisions() {
     }
 
     // Then rebuild the broad-phase grid from the updated particle positions.
-    std::unordered_map<CellCoord, std::vector<std::size_t>, CellCoordHash> grid;
-    grid.reserve(particles_.size());
+    grid_.clear();
     for (std::size_t index = 0; index < particles_.size(); ++index) {
-      grid[ComputeCell(particles_[index].position, gridCellSize_)].push_back(index);
+      grid_[ComputeCell(particles_[index].position, gridCellSize_)].push_back(index);
     }
 
     // Each particle checks only its own cell and the immediate neighbors.
@@ -303,8 +290,8 @@ void SimulationEngine::ResolveCollisions() {
       for (int offsetX : offsets) {
         for (int offsetY : offsets) {
           const CellCoord neighbor{cell.x + offsetX, cell.y + offsetY};
-          const auto iterator = grid.find(neighbor);
-          if (iterator == grid.end()) {
+          const auto iterator = grid_.find(neighbor);
+          if (iterator == grid_.end()) {
             continue;
           }
 

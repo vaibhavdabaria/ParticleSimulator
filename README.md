@@ -46,7 +46,7 @@ The build now produces:
 Example overrides:
 
 ```powershell
-.\build\Release\particle_simulator.exe .\scenarios\force_showcase.json --width 1440 --height 900 --speed 1.25 --seed 7
+.\build\Release\particle_simulator.exe .\scenarios\force_showcase.json --width 1440 --height 900 --speed 1.25
 ```
 
 ## Controls
@@ -108,7 +108,7 @@ Supported WebSocket commands:
 Scenario files are standard JSON files. A scenario describes:
 
 - how the window should look
-- how the simulation should run
+- how the window target FPS should drive runtime settings
 - which forces should be active
 - which particle types exist
 - how particles should be spawned
@@ -125,13 +125,12 @@ The simulator is launched like this:
 The parser accepts these top-level sections:
 
 - `window` - optional
-- `simulation` - optional
 - `forces` - optional
 - `particleTypes` - required
 - `spawnGroups` - required
 - `geometry` - required
 
-A minimal valid file can omit `window`, `simulation`, and `forces`, but it must still define at least one particle type, at least one spawn group, and the simulation bounds.
+A minimal valid file can omit `window` and `forces`, but it must still define at least one particle type, at least one spawn group, and the simulation bounds.
 
 ### Complete Example
 
@@ -143,12 +142,6 @@ A minimal valid file can omit `window`, `simulation`, and `forces`, but it must 
     "title": "My Particle Scene",
     "backgroundColor": [12, 18, 28, 255],
     "targetFps": 60
-  },
-  "simulation": {
-    "timestep": 0.0083333333,
-    "seed": 42,
-    "collisionIterations": 2,
-    "gridCellSize": 10.0
   },
   "forces": [
     {
@@ -258,34 +251,12 @@ Example:
 }
 ```
 
-### `simulation`
+### Runtime Settings
 
-This section controls how the physics loop behaves. If omitted, defaults are used.
-
-Fields:
-
-- `timestep` - positive number, default `0.0083333333` (`1/120`)
-- `seed` - non-negative integer, optional
-- `collisionIterations` - positive integer, default `1`
-- `gridCellSize` - positive number, optional
-
-Notes:
-
-- `seed` makes randomized spawning repeatable.
-- If `seed` is omitted, the simulator uses an internal default seed.
-- `gridCellSize` controls the broad-phase collision grid. If omitted, it is derived automatically from particle size.
-- CLI flag `--seed` overrides `simulation.seed`.
-
-Example:
-
-```json
-"simulation": {
-  "timestep": 0.01,
-  "seed": 123,
-  "collisionIterations": 2,
-  "gridCellSize": 12.0
-}
-```
+Physics runtime settings are derived automatically from `window.targetFps`.
+The simulator uses `1 / (targetFps * 2)` as the fixed timestep, derives collision
+iterations from the target frame rate, derives a deterministic seed from the
+target frame rate, and derives the broad-phase collision grid from particle size.
 
 ### `forces`
 
@@ -548,7 +519,7 @@ The parser currently expects:
 
 - vectors as arrays with exactly 2 numbers
 - colors as arrays with exactly 3 or 4 integers
-- positive values for `width`, `height`, `count`, `radius`, `mass`, `timestep`, `gridCellSize`, and obstacle sizes
+- positive values for `width`, `height`, `targetFps`, `count`, `radius`, `mass`, and obstacle sizes
 - `restitution` values between `0.0` and `1.0`
 - a valid `particleType` name in every spawn group
 
@@ -558,7 +529,6 @@ Common mistakes that will fail parsing:
 - misspelling force `type` or obstacle `type`
 - forgetting `particleTypes`, `spawnGroups`, or `geometry`
 - setting `count` to `0`
-- using negative `seed`
 - giving rectangle obstacles a non-positive `size`
 
 ### Practical Tips
@@ -566,8 +536,6 @@ Common mistakes that will fail parsing:
 - Start with a small scene first, then increase `count`.
 - Keep `bounds` the same aspect ratio as the window for a cleaner view.
 - Omit `forces` entirely if you want a zero-gravity sandbox.
-- Increase `collisionIterations` if collisions feel soft or unstable.
-- Set `gridCellSize` manually when testing very large particle counts.
 - Use the sample files in [`scenarios`](./scenarios) as templates:
   - `minimal_zero_gravity.json`
   - `force_showcase.json`

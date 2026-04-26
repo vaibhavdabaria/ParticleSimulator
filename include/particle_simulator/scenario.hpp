@@ -32,9 +32,8 @@ struct WindowConfig {
 // Global simulation settings that affect determinism and update behavior.
 struct SimulationConfig {
   double timestep = 1.0 / 120.0;
-  std::optional<std::uint32_t> seed;
+  std::uint32_t seed = 5549U;
   int collisionIterations = 1;
-  std::optional<double> gridCellSize;
 };
 
 // Force definitions are stored as a tagged union (std::variant). That lets the

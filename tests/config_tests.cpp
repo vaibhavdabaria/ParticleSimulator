@@ -25,7 +25,6 @@ TEST_CASE("minimal scenario loads without gravity") {
       "particle_simulator_config_minimal.json",
       R"json({
         "window": { "width": 800, "height": 600, "title": "Test" },
-        "simulation": { "timestep": 0.01, "seed": 42, "collisionIterations": 2 },
         "particleTypes": {
           "dust": {
             "radius": 4.0,
@@ -59,6 +58,9 @@ TEST_CASE("minimal scenario loads without gravity") {
   CHECK(scenario.spawnGroups.size() == 1);
   CHECK(scenario.particleTypes.contains("dust"));
   CHECK(scenario.spawnGroups.front().streakEnabled);
+  CHECK(scenario.simulation.timestep == doctest::Approx(1.0 / 120.0));
+  CHECK(scenario.simulation.seed == 5549U);
+  CHECK(scenario.simulation.collisionIterations == 2);
 }
 
 TEST_CASE("missing required sections produces a clear error") {
@@ -83,21 +85,17 @@ TEST_CASE("missing required sections produces a clear error") {
   std::filesystem::remove(path);
 }
 
-TEST_CASE("cli overrides replace window size and seed") {
+TEST_CASE("cli overrides replace window size") {
   particle_simulator::Scenario scenario;
   scenario.window.width = 640;
   scenario.window.height = 480;
-  scenario.simulation.seed = 11U;
 
   particle_simulator::ScenarioOverrides overrides;
   overrides.width = 1920;
   overrides.height = 1080;
-  overrides.seed = static_cast<std::uint32_t>(7);
 
   particle_simulator::ApplyOverrides(scenario, overrides);
 
   CHECK(scenario.window.width == 1920);
   CHECK(scenario.window.height == 1080);
-  REQUIRE(scenario.simulation.seed.has_value());
-  CHECK(*scenario.simulation.seed == 7U);
 }

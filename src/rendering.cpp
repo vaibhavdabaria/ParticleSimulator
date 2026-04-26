@@ -127,7 +127,8 @@ void DrawOverlay(const SimulationSceneSnapshot& scene, const SimulationSnapshot&
          << " | Seed: " << scene.resolvedSeed
          << " | Grid: " << std::fixed << std::setprecision(1) << scene.gridCellSize
          << " | Speed: " << std::setprecision(2) << snapshot.speedMultiplier
-         << "x | " << (snapshot.paused ? "Paused" : "Running");
+         << "x | FPS: " << GetFPS()
+         << " | " << (snapshot.paused ? "Paused" : "Running");
   DrawText(stream.str().c_str(), 18, 16, 20, RAYWHITE);
   DrawText("Space: pause  R: reset  N: step  Esc: quit", 18, 42, 18, Fade(RAYWHITE, 0.7F));
 }
@@ -140,7 +141,6 @@ int RunApplication(const CommandLineOptions& options) {
   launchOptions.scenario = LoadScenarioFromFile(options.scenarioPath);
   launchOptions.overrides.width = options.width;
   launchOptions.overrides.height = options.height;
-  launchOptions.overrides.seed = options.seed;
   launchOptions.speedMultiplier = options.speed.value_or(1.0);
   launchOptions.paused = options.paused;
   SimulationSession session(std::move(launchOptions));

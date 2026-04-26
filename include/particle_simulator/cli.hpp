@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <optional>
 #include <string>
 
@@ -13,7 +12,6 @@ struct CommandLineOptions {
   std::optional<int> width;
   std::optional<int> height;
   std::optional<double> speed;
-  std::optional<std::uint32_t> seed;
   bool paused = false;
   bool showHelp = false;
 };

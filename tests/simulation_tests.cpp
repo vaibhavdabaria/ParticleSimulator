@@ -67,6 +67,17 @@ TEST_CASE("particles stay still when gravity is omitted") {
   CHECK(after.position.y == doctest::Approx(before.position.y));
 }
 
+TEST_CASE("grid cell size is derived from configured particle radii") {
+  auto scenario = MakeBaseScenario();
+  auto group = SingleSpawn("slow", {50.0, 50.0});
+  group.radius = 8.0;
+  scenario.spawnGroups = {group};
+
+  particle_simulator::SimulationEngine engine(scenario);
+
+  CHECK(engine.GetGridCellSize() == doctest::Approx(20.0));
+}
+
 TEST_CASE("gravity changes velocity only when configured") {
   auto scenario = MakeBaseScenario();
   scenario.spawnGroups = {SingleSpawn("slow", {50.0, 50.0})};

@@ -112,7 +112,6 @@ TEST_CASE("session serializes scene metadata and live snapshots") {
 TEST_CASE("raw json scenarios can be loaded directly for web sessions") {
   const std::string rawScenario = R"json({
     "window": { "width": 800, "height": 600, "title": "Web Raw", "backgroundColor": [14, 18, 28, 255], "targetFps": 60 },
-    "simulation": { "timestep": 0.02, "seed": 9, "collisionIterations": 1 },
     "forces": [{ "type": "wind", "acceleration": [1.0, 0.0] }],
     "particleTypes": {
       "dust": {

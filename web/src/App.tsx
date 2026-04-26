@@ -408,8 +408,14 @@ function drawSnapshot(
   const devicePixelRatio = window.devicePixelRatio || 1
   const width = canvas.clientWidth
   const height = canvas.clientHeight
-  canvas.width = Math.max(1, Math.floor(width * devicePixelRatio))
-  canvas.height = Math.max(1, Math.floor(height * devicePixelRatio))
+  const canvasWidth = Math.max(1, Math.floor(width * devicePixelRatio))
+  const canvasHeight = Math.max(1, Math.floor(height * devicePixelRatio))
+  if (canvas.width !== canvasWidth) {
+    canvas.width = canvasWidth
+  }
+  if (canvas.height !== canvasHeight) {
+    canvas.height = canvasHeight
+  }
   context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
 
   const { scenario } = scene
@@ -504,6 +510,7 @@ function HomePage({
   downloadScenario,
   runScenario,
   snapshot,
+  achievedFrameRate,
   canvasRef,
   sendCommand,
   stopSession,
@@ -520,6 +527,7 @@ function HomePage({
   downloadScenario: () => void
   runScenario: () => Promise<void>
   snapshot: SimulationSnapshot | null
+  achievedFrameRate: number | null
   canvasRef: React.RefObject<HTMLCanvasElement | null>
   sendCommand: (payload: object) => void
   stopSession: () => void
@@ -529,6 +537,8 @@ function HomePage({
   const currentSpeedIndex = findClosestSpeedIndex(speedOptions, currentSpeed)
   const particleCount = snapshot?.particleCount ?? 0
   const simulationTime = snapshot ? `${snapshot.simulationTime.toFixed(2)}s` : '0.00s'
+  const frameRateLabel =
+    snapshot?.paused ? '0 fps' : achievedFrameRate === null ? '-- fps' : `${Math.round(achievedFrameRate)} fps`
   const [scenarioSearch, setScenarioSearch] = useState('')
   const [scenarioFlash, setScenarioFlash] = useState(false)
   const filteredScenarios = bundledScenarios.filter((scenario) =>
@@ -608,6 +618,10 @@ function HomePage({
               <div className="playbackMetric">
                 <span>Sim Time</span>
                 <strong>{simulationTime}</strong>
+              </div>
+              <div className="playbackMetric">
+                <span>Frame Rate</span>
+                <strong>{frameRateLabel}</strong>
               </div>
             </div>
             <div
@@ -854,43 +868,6 @@ function AdditionalSettingsPage({
             value={draft.window.backgroundColor}
             onChange={(value) => updateDraft({ ...draft, window: { ...draft.window, backgroundColor: value } })}
           />
-        </div>
-
-        <div className="panel">
-          <p className="panelKicker">Simulation</p>
-          <h3>Physics runtime</h3>
-          <div className="formGrid">
-            <NumberField
-              label="Timestep"
-              value={draft.simulation.timestep}
-              min={0.000001}
-              onChange={(value) => updateDraft({ ...draft, simulation: { ...draft.simulation, timestep: value } })}
-            />
-            <OptionalNumberField
-              label="Seed"
-              value={draft.simulation.seed}
-              min={0}
-              step={1}
-              onChange={(value) => updateDraft({ ...draft, simulation: { ...draft.simulation, seed: value } })}
-            />
-            <NumberField
-              label="Collision Iterations"
-              value={draft.simulation.collisionIterations}
-              min={1}
-              step={1}
-              onChange={(value) =>
-                updateDraft({ ...draft, simulation: { ...draft.simulation, collisionIterations: value } })
-              }
-            />
-            <OptionalNumberField
-              label="Grid Cell Size"
-              value={draft.simulation.gridCellSize}
-              min={0.000001}
-              onChange={(value) =>
-                updateDraft({ ...draft, simulation: { ...draft.simulation, gridCellSize: value } })
-              }
-            />
-          </div>
         </div>
 
         <div className="panel">
@@ -1570,9 +1547,14 @@ function App() {
   const [, setConnectionState] = useState<ConnectionState>('idle')
   const [scene, setScene] = useState<SimulationSceneSnapshot | null>(null)
   const [snapshot, setSnapshot] = useState<SimulationSnapshot | null>(null)
+  const [achievedFrameRate, setAchievedFrameRate] = useState<number | null>(null)
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const socketRef = useRef<WebSocket | null>(null)
+  const frameRateSampleRef = useRef<{ lastSnapshotTime: number | null; intervals: number[] }>({
+    lastSnapshotTime: null,
+    intervals: [],
+  })
   const validationErrors = validateScenario(draft)
 
   useEffect(() => {
@@ -1669,6 +1651,8 @@ function App() {
 
     socketRef.current?.close()
     setConnectionState('connecting')
+    frameRateSampleRef.current = { lastSnapshotTime: null, intervals: [] }
+    setAchievedFrameRate(null)
 
     try {
       const sessionId = await createSession({ scenario: draft })
@@ -1715,6 +1699,7 @@ function App() {
         setConnectionState('connected')
         return
       case 'snapshot':
+        updateAchievedFrameRate(event.snapshot)
         setSnapshot(event.snapshot)
         setConnectionState('connected')
         return
@@ -1723,6 +1708,28 @@ function App() {
       case 'error':
         setConnectionState('error')
     }
+  }
+
+  function updateAchievedFrameRate(nextSnapshot: SimulationSnapshot) {
+    const sample = frameRateSampleRef.current
+    if (nextSnapshot.paused) {
+      sample.lastSnapshotTime = null
+      sample.intervals = []
+      setAchievedFrameRate(null)
+      return
+    }
+
+    const now = performance.now()
+    if (sample.lastSnapshotTime !== null) {
+      const interval = now - sample.lastSnapshotTime
+      if (interval > 0 && interval < 1000) {
+        sample.intervals = [...sample.intervals.slice(-29), interval]
+        const averageInterval =
+          sample.intervals.reduce((total, current) => total + current, 0) / sample.intervals.length
+        setAchievedFrameRate(1000 / averageInterval)
+      }
+    }
+    sample.lastSnapshotTime = now
   }
 
   function sendCommand(payload: object) {
@@ -1767,6 +1774,7 @@ function App() {
       downloadScenario={downloadScenario}
       runScenario={runScenario}
       snapshot={snapshot}
+      achievedFrameRate={achievedFrameRate}
       canvasRef={canvasRef}
       sendCommand={sendCommand}
       stopSession={stopSession}

@@ -6,11 +6,6 @@
     "backgroundColor": [10, 13, 18, 255],
     "targetFps": 60
   },
-  "simulation": {
-    "timestep": 0.0083333333,
-    "seed": 99,
-    "collisionIterations": 3
-  },
   "forces": [
     {
       "type": "gravity",

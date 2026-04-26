@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <unordered_map>
 #include <vector>
 
 #include "particle_simulator/scenario.hpp"
@@ -25,6 +26,21 @@ struct TrailSegment {
   Vec2 start{};
   Vec2 end{};
   ColorRgba color{255, 255, 255, 255};
+};
+
+// Grid cell coordinate used by the broad-phase collision structure.
+struct CellCoord {
+  int x = 0;
+  int y = 0;
+
+  bool operator==(const CellCoord& other) const {
+    return x == other.x && y == other.y;
+  }
+};
+
+// Hash support so CellCoord can be used as a key in unordered_map.
+struct CellCoordHash {
+  std::size_t operator()(const CellCoord& cell) const;
 };
 
 // Owns the simulation state, including the original scenario, the generated
@@ -53,6 +69,8 @@ class SimulationEngine {
   std::vector<Particle> initialParticles_;
   std::vector<Particle> particles_;
   std::vector<TrailSegment> trailSegments_;
+  std::vector<Vec2> previousPositions_;
+  std::unordered_map<CellCoord, std::vector<std::size_t>, CellCoordHash> grid_;
 
   // Expand spawn groups into concrete particles using the resolved random seed.
   void BuildInitialParticles();

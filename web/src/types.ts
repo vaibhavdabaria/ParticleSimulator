@@ -9,13 +9,6 @@ export interface WindowConfig {
   targetFps: number
 }
 
-export interface SimulationConfig {
-  timestep: number
-  seed?: number
-  collisionIterations: number
-  gridCellSize?: number
-}
-
 export interface GravityForce {
   type: 'gravity'
   acceleration: Vec2
@@ -90,7 +83,6 @@ export interface GeometryDefinition {
 
 export interface Scenario {
   window: WindowConfig
-  simulation: SimulationConfig
   forces: ForceDefinition[]
   particleTypes: Record<string, ParticleTypeDefinition>
   spawnGroups: SpawnGroupDefinition[]
@@ -108,7 +100,6 @@ export interface SessionCreateRequest {
   overrides?: {
     width?: number
     height?: number
-    seed?: number
   }
   speedMultiplier?: number
   paused?: boolean

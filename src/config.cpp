@@ -1,5 +1,7 @@
 #include "particle_simulator/config.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <fstream>
 #include <sstream>
@@ -153,33 +155,11 @@ WindowConfig ReadWindowConfig(const json& root) {
   return window;
 }
 
-// Read the optional global simulation settings.
-SimulationConfig ReadSimulationConfig(const json& root) {
+SimulationConfig BuildSimulationConfig(const WindowConfig& window) {
   SimulationConfig config;
-  if (!root.contains("simulation")) {
-    return config;
-  }
-
-  const auto& node = RequireObject(root.at("simulation"), "simulation");
-  if (node.contains("timestep")) {
-    config.timestep = ReadPositiveDouble(node.at("timestep"), "simulation.timestep");
-  }
-  if (node.contains("seed")) {
-    if (!node.at("seed").is_number_unsigned() && !node.at("seed").is_number_integer()) {
-      throw std::runtime_error("Expected integer at 'simulation.seed'.");
-    }
-    const auto seed = node.at("seed").get<std::int64_t>();
-    if (seed < 0) {
-      throw std::runtime_error("Expected non-negative integer at 'simulation.seed'.");
-    }
-    config.seed = static_cast<std::uint32_t>(seed);
-  }
-  if (node.contains("collisionIterations")) {
-    config.collisionIterations = ReadPositiveInt(node.at("collisionIterations"), "simulation.collisionIterations");
-  }
-  if (node.contains("gridCellSize")) {
-    config.gridCellSize = ReadPositiveDouble(node.at("gridCellSize"), "simulation.gridCellSize");
-  }
+  config.timestep = 1.0 / (static_cast<double>(window.targetFps) * 2.0);
+  config.seed = static_cast<std::uint32_t>(5489 + window.targetFps);
+  config.collisionIterations = std::max(1, static_cast<int>(std::lround(120.0 / window.targetFps)));
   return config;
 }
 
@@ -405,7 +385,7 @@ Scenario LoadScenarioFromJsonString(const std::string& jsonText) {
   // Then map each top-level section into strongly typed C++ structures.
   Scenario scenario;
   scenario.window = ReadWindowConfig(root);
-  scenario.simulation = ReadSimulationConfig(root);
+  scenario.simulation = BuildSimulationConfig(scenario.window);
   scenario.forces = ReadForces(root);
   scenario.particleTypes = ReadParticleTypes(root);
   scenario.spawnGroups = ReadSpawnGroups(root);
@@ -434,10 +414,6 @@ void ApplyOverrides(Scenario& scenario, const ScenarioOverrides& overrides) {
 
   if (overrides.height) {
     scenario.window.height = *overrides.height;
-  }
-
-  if (overrides.seed) {
-    scenario.simulation.seed = overrides.seed;
   }
 }
 

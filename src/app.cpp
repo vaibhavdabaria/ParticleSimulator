@@ -254,17 +254,6 @@ nlohmann::json SerializeScenarioToJson(const Scenario& scenario) {
     obstacles.push_back(SerializeObstacle(obstacle));
   }
 
-  nlohmann::json simulation = {
-      {"timestep", scenario.simulation.timestep},
-      {"collisionIterations", scenario.simulation.collisionIterations},
-  };
-  if (scenario.simulation.seed) {
-    simulation["seed"] = *scenario.simulation.seed;
-  }
-  if (scenario.simulation.gridCellSize) {
-    simulation["gridCellSize"] = *scenario.simulation.gridCellSize;
-  }
-
   return {
       {"window",
        {
@@ -274,7 +263,6 @@ nlohmann::json SerializeScenarioToJson(const Scenario& scenario) {
            {"backgroundColor", SerializeColor(scenario.window.backgroundColor)},
            {"targetFps", scenario.window.targetFps},
        }},
-      {"simulation", std::move(simulation)},
       {"forces", std::move(forces)},
       {"particleTypes", std::move(particleTypes)},
       {"spawnGroups", std::move(spawnGroups)},

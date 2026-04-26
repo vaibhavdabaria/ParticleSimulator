@@ -98,12 +98,6 @@ export function createDefaultScenario(): Scenario {
       backgroundColor: [12, 18, 28, 255],
       targetFps: 60,
     },
-    simulation: {
-      timestep: 1 / 120,
-      seed: 42,
-      collisionIterations: 2,
-      gridCellSize: 12,
-    },
     forces: [createDefaultForce('gravity'), createDefaultForce('drag')],
     particleTypes: {
       dust: createDefaultParticleType(),
@@ -260,19 +254,6 @@ export function normalizeScenario(value: unknown): Scenario {
           targetFps: Math.round(coerceNumber(value.window.targetFps, fallback.window.targetFps)),
         }
       : fallback.window,
-    simulation: isRecord(value.simulation)
-      ? {
-          timestep: coerceNumber(value.simulation.timestep, fallback.simulation.timestep),
-          seed: value.simulation.seed === undefined ? undefined : Math.round(coerceNumber(value.simulation.seed, 0)),
-          collisionIterations: Math.round(
-            coerceNumber(value.simulation.collisionIterations, fallback.simulation.collisionIterations),
-          ),
-          gridCellSize:
-            value.simulation.gridCellSize === undefined
-              ? undefined
-              : coerceNumber(value.simulation.gridCellSize, fallback.simulation.gridCellSize ?? 12),
-        }
-      : fallback.simulation,
     forces,
     particleTypes,
     spawnGroups,
@@ -313,19 +294,6 @@ export function validateScenario(scenario: Scenario): string[] {
     errors.push('Window title is required.')
   }
   validateColor('Window background color', scenario.window.backgroundColor, errors)
-
-  if (scenario.simulation.timestep <= 0) {
-    errors.push('Simulation timestep must be positive.')
-  }
-  if (scenario.simulation.collisionIterations <= 0) {
-    errors.push('Collision iterations must be positive.')
-  }
-  if (scenario.simulation.seed !== undefined && scenario.simulation.seed < 0) {
-    errors.push('Simulation seed must be non-negative.')
-  }
-  if (scenario.simulation.gridCellSize !== undefined && scenario.simulation.gridCellSize <= 0) {
-    errors.push('Grid cell size must be positive when provided.')
-  }
 
   if (Object.keys(scenario.particleTypes).length === 0) {
     errors.push('At least one particle type is required.')

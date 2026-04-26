@@ -9,10 +9,10 @@
         color-scheme: dark;
         --bg-0: #0b1320;
         --bg-1: #132131;
-        --bg-2: #1b2f45;
         --line: rgba(255, 255, 255, 0.12);
         --text: #f7f1e7;
-        --muted: rgba(247, 241, 231, 0.72);
+        --muted: rgba(247, 241, 231, 0.74);
+        --soft: rgba(247, 241, 231, 0.52);
         --accent: #f0a33a;
         --accent-2: #57c7b6;
       }
@@ -26,23 +26,22 @@
         font-family: "Segoe UI", "Trebuchet MS", sans-serif;
         color: var(--text);
         background:
-          radial-gradient(circle at top left, rgba(87, 199, 182, 0.16), transparent 28%),
-          radial-gradient(circle at top right, rgba(240, 163, 58, 0.16), transparent 30%),
+          radial-gradient(circle at top left, rgba(87, 199, 182, 0.14), transparent 28%),
+          radial-gradient(circle at top right, rgba(240, 163, 58, 0.14), transparent 30%),
           linear-gradient(160deg, var(--bg-0) 0%, #152538 48%, #101a28 100%);
       }
 
       main {
-        max-width: 960px;
+        max-width: 980px;
         margin: 0 auto;
-        padding: 28px 22px 40px;
+        padding: 28px 22px 42px;
       }
 
       .hero,
-      section,
-      pre {
+      section {
         border: 1px solid var(--line);
-        border-radius: 24px;
-        background: rgba(12, 20, 31, 0.84);
+        border-radius: 18px;
+        background: rgba(12, 20, 31, 0.86);
         box-shadow: 0 18px 44px rgba(6, 12, 20, 0.28);
       }
 
@@ -53,9 +52,8 @@
 
       .eyebrow {
         margin: 0 0 10px;
-        color: rgba(247, 241, 231, 0.5);
+        color: var(--soft);
         font-size: 0.78rem;
-        letter-spacing: 0.14em;
         text-transform: uppercase;
       }
 
@@ -67,13 +65,19 @@
       }
 
       h1 {
-        font-size: clamp(2rem, 4vw, 3.5rem);
-        line-height: 0.98;
+        font-size: clamp(2rem, 4vw, 3.4rem);
+        line-height: 1;
       }
 
       h2 {
-        font-size: 1.15rem;
         margin-bottom: 14px;
+        font-size: 1.35rem;
+      }
+
+      h3 {
+        margin: 18px 0 8px;
+        font-size: 1rem;
+        color: rgba(247, 241, 231, 0.9);
       }
 
       p,
@@ -82,9 +86,28 @@
         line-height: 1.6;
       }
 
+      p {
+        margin: 0 0 12px;
+      }
+
+      ul,
+      ol {
+        margin: 0 0 12px;
+        padding-left: 22px;
+      }
+
+      li + li {
+        margin-top: 5px;
+      }
+
+      section {
+        padding: 20px 22px;
+        margin-top: 16px;
+      }
+
       .lead {
-        margin: 14px 0 0;
-        max-width: 62ch;
+        margin-top: 14px;
+        max-width: 70ch;
       }
 
       .grid {
@@ -93,23 +116,13 @@
         gap: 16px;
       }
 
-      section {
-        padding: 18px 20px;
+      .callout {
+        border-left: 3px solid var(--accent-2);
+        padding-left: 12px;
       }
 
-      ul {
-        margin: 0;
-        padding-left: 18px;
-      }
-
-      pre {
-        margin: 0;
-        padding: 18px 20px;
-        overflow: auto;
-        color: #dceef0;
-        line-height: 1.5;
-        font-family: "IBM Plex Mono", Consolas, monospace;
-        font-size: 0.9rem;
+      strong {
+        color: var(--text);
       }
 
       code {
@@ -117,18 +130,9 @@
         font-family: "IBM Plex Mono", Consolas, monospace;
       }
 
-      .note {
-        border-left: 3px solid var(--accent-2);
-        padding-left: 12px;
-      }
-
-      .accent {
-        color: var(--accent);
-      }
-
       @media (max-width: 760px) {
         main {
-          padding: 18px 16px 28px;
+          padding: 18px 16px 30px;
         }
 
         .grid {
@@ -140,92 +144,129 @@
   <body>
     <main>
       <div class="hero">
-        <p class="eyebrow">README / Help</p>
+        <p class="eyebrow">Help</p>
         <h1>Particle Simulator</h1>
         <p class="lead">
-          A C++20 2D particle simulator with a native desktop renderer, a C++ web server, and a React-based browser UI
-          for building scenarios and streaming live simulation snapshots.
+          Use this guide to load, run, edit, and create particle simulation scenarios from the browser interface.
         </p>
       </div>
 
-      <div class="grid">
-        <section>
-          <h2>Key Features</h2>
-          <ul>
-            <li>Native C++ simulation core shared by desktop and web experiences</li>
-            <li>JSON scenarios for particles, forces, bounds, and obstacles</li>
-            <li>Live browser playback over WebSocket</li>
-            <li>Scenario builder for authoring and editing setups in the browser</li>
-            <li>Pause, reset, step, and speed controls</li>
-          </ul>
-        </section>
-
-        <section>
-          <h2>Desktop Controls</h2>
-          <ul>
-            <li><code>Space</code>: pause or resume</li>
-            <li><code>R</code>: reset to the initial state</li>
-            <li><code>N</code>: single simulation step while paused</li>
-            <li><code>Esc</code>: close the window</li>
-          </ul>
-        </section>
-      </div>
-
-      <div class="grid" style="margin-top: 16px;">
-        <section>
-          <h2>Build</h2>
-          <pre><code>cmake -S . -B build
-cmake --build build --config Release</code></pre>
-        </section>
-
-        <section>
-          <h2>Run Desktop App</h2>
-          <pre><code>.\build\Release\particle_simulator.exe .\scenarios\minimal_zero_gravity.json</code></pre>
-        </section>
-      </div>
-
-      <div class="grid" style="margin-top: 16px;">
-        <section>
-          <h2>Web Frontend Setup</h2>
-          <pre><code>cd .\web
-npm install
-npm run build</code></pre>
-        </section>
-
-        <section>
-          <h2>Start Web Server</h2>
-          <pre><code>cd ..
-.\build\Release\particle_simulator_web_server.exe --web-root web/dist --scenario-dir scenarios</code></pre>
-        </section>
-      </div>
-
-      <section style="margin-top: 16px;">
-        <h2>Web API</h2>
-        <ul>
-          <li><code>GET /api/scenarios</code> lists bundled example scenarios</li>
-          <li><code>POST /api/session</code> creates a simulation session from scenario JSON</li>
-          <li><code>GET /ws?sessionId=...</code> streams snapshots and accepts playback commands</li>
-        </ul>
-        <p class="note">
-          Supported WebSocket commands include <code>play</code>, <code>pause</code>, <code>reset</code>,
-          <code>step</code>, and <code>setSpeed</code>.
+      <section>
+        <h2>Quick Overview</h2>
+        <p>
+          Particle Simulator lets you create and run 2D particle scenes in the browser. A scene can contain many
+          particles, forces such as gravity or wind, boundaries, and obstacles. The simulator shows how those particles
+          move and collide over time.
         </p>
+        <p>
+          A <strong>scenario</strong> is the setup for a simulation. It describes what particles exist, where they
+          start, how they move, what forces affect them, and what area they are allowed to move inside. Scenarios can be
+          loaded from bundled examples, uploaded as JSON files, edited in the app, downloaded, and run.
+        </p>
+
+        <div class="grid">
+          <div>
+            <h3>Main Page Controls</h3>
+            <ul>
+              <li><strong>Play / Pause:</strong> starts or pauses the current simulation.</li>
+              <li><strong>Stop:</strong> resets the current simulation back to the start and leaves it paused.</li>
+              <li><strong>Speed slider:</strong> changes playback speed in fixed steps.</li>
+              <li><strong>Particles:</strong> shows the number of particles in the running scenario.</li>
+              <li><strong>Sim Time:</strong> shows how much simulation time has elapsed.</li>
+              <li><strong>Scenario:</strong> shows the selected or custom scenario.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Builder Buttons</h3>
+            <ul>
+              <li><strong>Choose Scenario:</strong> opens the scenario picker for bundled examples.</li>
+              <li><strong>Load:</strong> loads the selected bundled scenario into the builder.</li>
+              <li><strong>Upload:</strong> imports a scenario JSON file from your computer.</li>
+              <li><strong>Download:</strong> saves the current scenario as a JSON file.</li>
+              <li><strong>Run:</strong> starts a simulation using the current scenario.</li>
+              <li><strong>Additional Settings:</strong> opens the full scenario editor.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>Typical Workflow</h3>
+        <ol>
+          <li>Click <strong>Choose Scenario</strong> and select a bundled scenario, or click <strong>Upload</strong>.</li>
+          <li>Click <strong>Load</strong> if you chose a bundled scenario and want to inspect or edit it first.</li>
+          <li>Click <strong>Run</strong> to start the simulation.</li>
+          <li>Use <strong>Play / Pause</strong>, <strong>Stop</strong>, and the <strong>Speed slider</strong> to control playback.</li>
+          <li>Use <strong>Additional Settings</strong> to customize the scenario.</li>
+          <li>Use <strong>Download</strong> to save a scenario you want to keep.</li>
+        </ol>
       </section>
 
-      <section style="margin-top: 16px;">
-        <h2>Scenario Schema</h2>
+      <section>
+        <h2>Creating a Custom Scenario</h2>
         <p>
-          A valid scenario defines <span class="accent">particle types</span>, <span class="accent">spawn groups</span>,
-          and <span class="accent">geometry</span>. Optional sections include <code>window</code>,
-          <code>simulation</code>, and <code>forces</code>.
+          Use <strong>Additional Settings</strong> to create or edit a custom scenario. The settings page is organized
+          into sections, and each section controls a different part of the simulation.
         </p>
+
+        <h3>Window Settings</h3>
+        <p>
+          Window settings describe how the simulation appears. You can configure width, height, title, background color,
+          and target FPS. These settings affect presentation and usually do not change particle physics.
+        </p>
+
+        <h3>Runtime Settings</h3>
+        <p>
+          Runtime settings are derived from target FPS. The app chooses the fixed physics timestep, repeatable seed, and
+          collision iterations automatically.
+        </p>
+        <p class="callout">
+          If a simulation feels heavy, try lowering particle count or target FPS.
+        </p>
+
+        <h3>Forces</h3>
+        <p>
+          Forces push or pull particles during the simulation. Gravity applies constant acceleration, drag slows
+          particles down, wind pushes in a chosen direction, and radial forces pull particles toward or push particles
+          away from a point.
+        </p>
+
+        <h3>Particle Types</h3>
+        <p>
+          Particle types define reusable particle properties such as radius, mass, restitution, color, and initial
+          velocity. Use multiple particle types when the same scenario needs different kinds of particles.
+        </p>
+
+        <h3>Spawn Groups</h3>
+        <p>
+          Spawn groups create actual particles from particle types. A spawn group controls which particle type to use,
+          how many particles to create, where they can appear, and what range of starting velocities they can have.
+          Spawn groups can also override radius, mass, restitution, or color.
+        </p>
+
+        <h3>Geometry</h3>
+        <p>
+          Geometry defines the physical space of the simulation. Bounds act like the outer walls. Obstacles are fixed
+          shapes inside the simulation area that particles can collide with.
+        </p>
+
+        <h3>Obstacles</h3>
+        <p>
+          Obstacles can be rectangles or circles. Rectangle obstacles use position and size. Circle obstacles use center
+          and radius. Restitution controls how bouncy collisions with the obstacle are.
+        </p>
+
+        <h3>JSON Preview</h3>
+        <p>
+          The JSON preview shows the scenario data that the app will run or download. You do not need to edit JSON
+          manually, but it is useful for inspecting, sharing, or debugging a scenario.
+        </p>
+
+        <h3>Scenario Building Tips</h3>
         <ul>
-          <li><code>window</code>: rendering size, title, background, FPS</li>
-          <li><code>simulation</code>: timestep, seed, collision iterations, grid size</li>
-          <li><code>forces</code>: gravity, drag, wind, and radial fields</li>
-          <li><code>particleTypes</code>: radius, mass, restitution, color, initial velocity</li>
-          <li><code>spawnGroups</code>: particle counts plus spawn position and velocity ranges</li>
-          <li><code>geometry</code>: world bounds and rectangle/circle obstacles</li>
+          <li>Start from a bundled scenario, then modify it.</li>
+          <li>Keep particle counts low while experimenting, then increase them later.</li>
+          <li>Make sure spawn positions are inside the simulation bounds.</li>
+          <li>Use drag to calm down fast or chaotic simulations.</li>
+          <li>Download your scenario after making changes you want to keep.</li>
         </ul>
       </section>
     </main>

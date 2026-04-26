@@ -2,3 +2,4 @@ build/
 .vs/
 out/
 run_web_app.ps1
+build_cpp_app.ps1

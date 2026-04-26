@@ -12,7 +12,6 @@ namespace particle_simulator {
 struct ScenarioOverrides {
   std::optional<int> width;
   std::optional<int> height;
-  std::optional<std::uint32_t> seed;
 };
 
 // Load and validate a scenario JSON file from disk.

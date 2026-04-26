@@ -39,7 +39,18 @@ struct SessionRecord {
   crow::websocket::connection* connection = nullptr;
   Clock::time_point lastUpdate = Clock::now();
   Clock::time_point lastSnapshotSent = Clock::now();
+  Clock::duration targetSnapshotInterval = std::chrono::milliseconds(16);
 };
+
+Clock::duration SnapshotIntervalForTargetFps(int targetFps) {
+  if (targetFps <= 0) {
+    return std::chrono::milliseconds(16);
+  }
+
+  const auto interval = std::chrono::duration_cast<Clock::duration>(
+      std::chrono::duration<double>(1.0 / static_cast<double>(targetFps)));
+  return interval > Clock::duration::zero() ? interval : std::chrono::milliseconds(16);
+}
 
 std::string ReadTextFile(const fs::path& path) {
   std::ifstream input(path, std::ios::binary);
@@ -152,9 +163,6 @@ particle_simulator::ScenarioOverrides ParseOverrides(const json& node) {
   if (node.contains("height")) {
     overrides.height = node.at("height").get<int>();
   }
-  if (node.contains("seed")) {
-    overrides.seed = node.at("seed").get<std::uint32_t>();
-  }
   return overrides;
 }
 
@@ -237,6 +245,8 @@ class SimulationHub {
     record->session = session;
     record->lastUpdate = Clock::now();
     record->lastSnapshotSent = Clock::now();
+    record->targetSnapshotInterval =
+        SnapshotIntervalForTargetFps(session->GetSceneSnapshot().scenario.window.targetFps);
 
     std::scoped_lock lock(mutex_);
     sessions_[sessionId] = std::move(record);
@@ -355,7 +365,6 @@ class SimulationHub {
 
   void RunLoop(std::stop_token stopToken) {
     constexpr auto tickInterval = std::chrono::milliseconds(16);
-    constexpr auto snapshotInterval = std::chrono::milliseconds(40);
 
     while (!stopToken.stop_requested()) {
       std::vector<std::shared_ptr<SessionRecord>> records;
@@ -376,7 +385,7 @@ class SimulationHub {
           continue;
         }
 
-        const bool due = now - record->lastSnapshotSent >= snapshotInterval;
+        const bool due = now - record->lastSnapshotSent >= record->targetSnapshotInterval;
         if (due) {
           SendSnapshot(record);
         }
