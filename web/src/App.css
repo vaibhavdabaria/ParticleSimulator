@@ -36,7 +36,7 @@ textarea {
 
 .appShell {
   min-height: 100vh;
-  padding: 28px;
+  padding: 18px;
   color: var(--sand-100);
   background:
     radial-gradient(circle at top left, rgba(87, 199, 182, 0.18), transparent 28%),
@@ -64,10 +64,11 @@ textarea {
 }
 
 .simplifiedHero {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 6px;
-  margin-bottom: 10px;
-  padding: 10px 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
 }
 
 .settingsHero {
@@ -168,8 +169,8 @@ textarea {
 
 .homeWorkspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.9fr) minmax(110px, 0.22fr);
-  gap: 14px;
+  grid-template-columns: minmax(0, 2.35fr) minmax(84px, 0.14fr);
+  gap: 8px;
   align-items: start;
   flex: 1;
   min-height: 0;
@@ -213,7 +214,7 @@ textarea {
   align-items: center;
   justify-content: space-between;
   flex-wrap: nowrap;
-  gap: 10px;
+  gap: 12px;
 }
 
 .transportCluster {
@@ -222,12 +223,43 @@ textarea {
   gap: 8px;
 }
 
+.playbackMetrics {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+}
+
+.playbackMetric {
+  display: grid;
+  gap: 1px;
+}
+
+.playbackMetric span {
+  color: rgba(247, 241, 231, 0.42);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.playbackMetric strong {
+  color: rgba(247, 241, 231, 0.78);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
 .playbackScenarioInfo {
   display: grid;
   flex: 1;
   min-width: 0;
   justify-items: center;
   gap: 1px;
+  border-radius: 10px;
+  transition: color 160ms ease;
+}
+
+.playbackScenarioInfoFlash {
+  animation: scenarioFlash 850ms ease-out;
 }
 
 .playbackScenarioLabel {
@@ -251,6 +283,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-left: auto;
 }
 
 .speedCluster {
@@ -322,8 +355,8 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
@@ -386,49 +419,13 @@ textarea {
   gap: 8px;
 }
 
-.builderScenarioTray {
-  display: grid;
-  gap: 6px;
-  width: 124px;
-  max-height: 0;
-  padding: 0 8px;
-  overflow: hidden;
-  opacity: 0;
-  border: 1px solid transparent;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  transform: translateY(-6px);
-  transition:
-    max-height 180ms ease,
-    opacity 160ms ease,
-    transform 180ms ease,
-    padding 180ms ease,
-    border-color 180ms ease;
-}
-
-.builderScenarioTrayOpen {
-  max-height: 120px;
-  padding: 8px;
-  opacity: 1;
-  border-color: rgba(255, 255, 255, 0.08);
-  transform: translateY(0);
-}
-
-.builderScenarioTrayLabel {
-  color: rgba(247, 241, 231, 0.52);
-  font-size: 0.66rem;
-  letter-spacing: 0.08em;
-  text-align: center;
-  text-transform: uppercase;
-}
-
 .roundIconButton {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -451,7 +448,7 @@ textarea {
 .builderRoundAction::after {
   content: attr(data-label);
   position: absolute;
-  left: calc(100% + 10px);
+  right: calc(100% + 10px);
   top: 50%;
   transform: translateY(-50%);
   padding: 5px 9px;
@@ -480,20 +477,153 @@ textarea {
 }
 
 .iconGlyph {
-  font-size: 1rem;
+  font-size: 1.25rem;
   line-height: 1;
   font-weight: 600;
 }
 
 .iconSvg {
-  width: 16px;
-  height: 16px;
+  width: 21px;
+  height: 21px;
 }
 
 .builderScenarioSelect {
   width: 100%;
   min-width: 0;
   font-size: 0.75rem;
+}
+
+.commandPaletteBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 10, 16, 0.48);
+  backdrop-filter: blur(8px);
+}
+
+.commandPalette {
+  width: min(520px, 100%);
+  max-height: min(620px, calc(100vh - 48px));
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  background: rgba(12, 20, 31, 0.96);
+  box-shadow: 0 24px 70px rgba(3, 7, 12, 0.48);
+}
+
+.commandPaletteHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.commandPaletteKicker {
+  margin: 0 0 4px;
+  color: rgba(247, 241, 231, 0.48);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.commandPalette h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.commandPaletteClose {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(247, 241, 231, 0.78);
+  cursor: pointer;
+}
+
+.commandPaletteSearch {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--sand-100);
+  outline: none;
+}
+
+.commandPaletteSearch:focus {
+  border-color: rgba(87, 199, 182, 0.5);
+}
+
+.commandPaletteList {
+  display: grid;
+  gap: 6px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.commandPaletteItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(247, 241, 231, 0.82);
+  text-align: left;
+  cursor: pointer;
+}
+
+.commandPaletteItem:hover,
+.commandPaletteItemActive {
+  border-color: rgba(87, 199, 182, 0.2);
+  background: rgba(87, 199, 182, 0.1);
+  color: var(--sand-100);
+}
+
+.commandPaletteItem span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes scenarioFlash {
+  0% {
+    background: rgba(240, 163, 58, 0);
+    box-shadow: 0 0 0 rgba(240, 163, 58, 0);
+  }
+
+  22% {
+    background: rgba(240, 163, 58, 0.18);
+    box-shadow: 0 0 18px rgba(240, 163, 58, 0.24);
+  }
+
+  100% {
+    background: rgba(240, 163, 58, 0);
+    box-shadow: 0 0 0 rgba(240, 163, 58, 0);
+  }
+}
+
+.commandPaletteItem strong {
+  color: rgba(87, 199, 182, 0.95);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.commandPaletteEmpty {
+  margin: 4px 0 0;
+  color: rgba(247, 241, 231, 0.56);
+  font-size: 0.84rem;
 }
 
 .builderActionButton {
@@ -505,7 +635,7 @@ textarea {
 .builderSidebar {
   grid-area: builder;
   position: sticky;
-  top: 20px;
+  top: 8px;
   align-self: start;
 }
 
@@ -547,6 +677,35 @@ textarea {
 
 .playbackStatusMessage {
   margin-top: 4px;
+}
+
+.helpButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(247, 241, 231, 0.74);
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    color 140ms ease;
+}
+
+.helpButton:hover {
+  transform: translateY(-1px);
+  color: rgba(247, 241, 231, 0.96);
+}
+
+.helpButton .iconSvg {
+  width: 18px;
+  height: 18px;
+}
+
+.helpButton span {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
 }
 
 .validationPanel {
@@ -649,15 +808,15 @@ select.textInput optgroup {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 54px;
-  height: 54px;
+  width: 70px;
+  height: 70px;
   padding: 0;
   border-radius: 999px;
 }
 
 .builderRoundAction svg {
-  width: 18px;
-  height: 18px;
+  width: 23px;
+  height: 23px;
 }
 
 .textInput:focus {
@@ -720,7 +879,7 @@ select.textInput optgroup {
 
 .viewerCanvasPanel {
   position: relative;
-  padding: 14px;
+  padding: 10px;
 }
 
 .viewerCanvasPanelLarge {
@@ -738,32 +897,6 @@ select.textInput optgroup {
 .viewerCanvasLarge {
   height: 100%;
   min-height: 0;
-}
-
-.viewerOverlay {
-  position: absolute;
-  top: 26px;
-  left: 26px;
-  display: flex;
-  gap: 18px;
-  pointer-events: none;
-}
-
-.viewerOverlayItem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.viewerOverlayItem span {
-  color: rgba(247, 241, 231, 0.38);
-  font-size: 0.84rem;
-}
-
-.viewerOverlayItem strong {
-  color: rgba(247, 241, 231, 0.5);
-  font-size: 0.96rem;
-  font-weight: 600;
 }
 
 .viewerGrid {
@@ -838,6 +971,13 @@ select.textInput optgroup {
     justify-content: space-between;
   }
 
+  .playbackMetrics {
+    order: 2;
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
   .playbackScenarioInfo {
     order: 3;
     width: 100%;
@@ -850,12 +990,6 @@ select.textInput optgroup {
 
   .speedSlider {
     width: 100%;
-  }
-
-  .viewerOverlay {
-    top: 22px;
-    left: 22px;
-    flex-wrap: wrap;
   }
 
   .viewerCanvasPanelLarge,

@@ -203,6 +203,21 @@ function StopIcon() {
   )
 }
 
+function HelpIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="iconSvg" aria-hidden="true">
+      <path
+        d="M9.4 9.1a2.8 2.8 0 1 1 4.8 1.9c-.8.8-1.7 1.2-1.7 2.3M12 17.2h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function NumberField({
   label,
   value,
@@ -512,6 +527,37 @@ function HomePage({
   const speedOptions = [0.25, 0.5, 1, 1.5, 2, 3, 4]
   const currentSpeed = snapshot?.speedMultiplier ?? 1
   const currentSpeedIndex = findClosestSpeedIndex(speedOptions, currentSpeed)
+  const particleCount = snapshot?.particleCount ?? 0
+  const simulationTime = snapshot ? `${snapshot.simulationTime.toFixed(2)}s` : '0.00s'
+  const [scenarioSearch, setScenarioSearch] = useState('')
+  const [scenarioFlash, setScenarioFlash] = useState(false)
+  const filteredScenarios = bundledScenarios.filter((scenario) =>
+    scenario.name.toLowerCase().includes(scenarioSearch.trim().toLowerCase()),
+  )
+
+  useEffect(() => {
+    setScenarioFlash(true)
+    const timeout = window.setTimeout(() => setScenarioFlash(false), 850)
+    return () => window.clearTimeout(timeout)
+  }, [scenarioDisplayName])
+
+  useEffect(() => {
+    if (!showScenarioPicker) {
+      setScenarioSearch('')
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowScenarioPicker(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [showScenarioPicker, setShowScenarioPicker])
 
   return (
     <div className="appShell simplifiedShell">
@@ -519,6 +565,16 @@ function HomePage({
         <div>
           <h1>Particle Simulator</h1>
         </div>
+        <button
+          type="button"
+          className="helpButton"
+          title="Help"
+          aria-label="Open Help"
+          onClick={() => window.open('/help.html', 'particle-simulator-help', 'popup=yes,width=1080,height=820,resizable=yes,scrollbars=yes')}
+        >
+          <HelpIcon />
+          <span>Help</span>
+        </button>
       </header>
 
       <main className="homeWorkspace">
@@ -544,7 +600,20 @@ function HomePage({
                 <StopIcon />
               </button>
             </div>
-            <div className="playbackScenarioInfo" title={scenarioDisplayName}>
+            <div className="playbackMetrics" aria-label="Simulation summary">
+              <div className="playbackMetric">
+                <span>Particles</span>
+                <strong>{particleCount}</strong>
+              </div>
+              <div className="playbackMetric">
+                <span>Sim Time</span>
+                <strong>{simulationTime}</strong>
+              </div>
+            </div>
+            <div
+              className={`playbackScenarioInfo${scenarioFlash ? ' playbackScenarioInfoFlash' : ''}`}
+              title={scenarioDisplayName}
+            >
               <span className="playbackScenarioLabel">Scenario</span>
               <strong className="playbackScenarioValue">{scenarioDisplayName}</strong>
             </div>
@@ -575,16 +644,6 @@ function HomePage({
         <section className="simulationColumn">
           <div className="viewerCanvasPanel viewerCanvasPanelLarge">
             <canvas ref={canvasRef} className="viewerCanvas viewerCanvasLarge" />
-            <div className="viewerOverlay">
-              <div className="viewerOverlayItem">
-                <span>Particles</span>
-                <strong>{snapshot?.particleCount ?? 0}</strong>
-              </div>
-              <div className="viewerOverlayItem">
-                <span>Sim Time</span>
-                <strong>{snapshot ? snapshot.simulationTime.toFixed(2) : '0.00'}s</strong>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -597,21 +656,6 @@ function HomePage({
               >
                 <PlusIcon />
               </RoundIconButton>
-              <div className={`builderScenarioTray${showScenarioPicker ? ' builderScenarioTrayOpen' : ''}`}>
-                <span className="builderScenarioTrayLabel">Scenarios</span>
-                <select
-                  className="textInput builderScenarioSelect"
-                  value={selectedScenarioId}
-                  onChange={(event) => setSelectedScenarioId(event.target.value)}
-                >
-                  <option value="">Choose bundled example</option>
-                  {bundledScenarios.map((scenario) => (
-                    <option key={scenario.id} value={scenario.id}>
-                      {scenario.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
               <RoundIconButton
                 label="Load Scenario"
                 onClick={() => {
@@ -657,6 +701,65 @@ function HomePage({
           </div>
         </aside>
       </main>
+
+      {showScenarioPicker ? (
+        <div
+          className="commandPaletteBackdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowScenarioPicker(false)
+            }
+          }}
+        >
+          <section className="commandPalette" role="dialog" aria-modal="true" aria-labelledby="scenario-palette-title">
+            <div className="commandPaletteHeader">
+              <div>
+                <p className="commandPaletteKicker">Scenario</p>
+                <h2 id="scenario-palette-title">Choose Scenario</h2>
+              </div>
+              <button
+                type="button"
+                className="commandPaletteClose"
+                aria-label="Close scenario chooser"
+                onClick={() => setShowScenarioPicker(false)}
+              >
+                x
+              </button>
+            </div>
+            <input
+              className="commandPaletteSearch"
+              type="search"
+              autoFocus
+              placeholder="Search scenarios..."
+              value={scenarioSearch}
+              onChange={(event) => setScenarioSearch(event.target.value)}
+            />
+            <div className="commandPaletteList" role="listbox" aria-label="Bundled scenarios">
+              {filteredScenarios.length > 0 ? (
+                filteredScenarios.map((scenario) => (
+                  <button
+                    key={scenario.id}
+                    type="button"
+                    className={`commandPaletteItem${scenario.id === selectedScenarioId ? ' commandPaletteItemActive' : ''}`}
+                    role="option"
+                    aria-selected={scenario.id === selectedScenarioId}
+                    onClick={() => {
+                      setSelectedScenarioId(scenario.id)
+                      setShowScenarioPicker(false)
+                    }}
+                  >
+                    <span>{scenario.name}</span>
+                    {scenario.id === selectedScenarioId ? <strong>Selected</strong> : null}
+                  </button>
+                ))
+              ) : (
+                <p className="commandPaletteEmpty">No matching scenarios.</p>
+              )}
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -1533,7 +1636,7 @@ function App() {
 
     setDraft(normalizeScenario(nextScenario.scenario))
     setScenarioDisplayName(nextScenario.name)
-    setBuilderMessage(`Loaded bundled scenario "${nextScenario.name}".`)
+    setBuilderMessage('')
   }
 
   async function uploadScenarioFile(file: File) {

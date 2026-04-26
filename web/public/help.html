@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Particle Simulator Help</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg-0: #0b1320;
+        --bg-1: #132131;
+        --bg-2: #1b2f45;
+        --line: rgba(255, 255, 255, 0.12);
+        --text: #f7f1e7;
+        --muted: rgba(247, 241, 231, 0.72);
+        --accent: #f0a33a;
+        --accent-2: #57c7b6;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(87, 199, 182, 0.16), transparent 28%),
+          radial-gradient(circle at top right, rgba(240, 163, 58, 0.16), transparent 30%),
+          linear-gradient(160deg, var(--bg-0) 0%, #152538 48%, #101a28 100%);
+      }
+
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 28px 22px 40px;
+      }
+
+      .hero,
+      section,
+      pre {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: rgba(12, 20, 31, 0.84);
+        box-shadow: 0 18px 44px rgba(6, 12, 20, 0.28);
+      }
+
+      .hero {
+        padding: 24px;
+        margin-bottom: 16px;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: rgba(247, 241, 231, 0.5);
+        font-size: 0.78rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-family: "Aptos Display", "Trebuchet MS", sans-serif;
+      }
+
+      h1 {
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        line-height: 0.98;
+      }
+
+      h2 {
+        font-size: 1.15rem;
+        margin-bottom: 14px;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .lead {
+        margin: 14px 0 0;
+        max-width: 62ch;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      section {
+        padding: 18px 20px;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      pre {
+        margin: 0;
+        padding: 18px 20px;
+        overflow: auto;
+        color: #dceef0;
+        line-height: 1.5;
+        font-family: "IBM Plex Mono", Consolas, monospace;
+        font-size: 0.9rem;
+      }
+
+      code {
+        color: #ffe1b1;
+        font-family: "IBM Plex Mono", Consolas, monospace;
+      }
+
+      .note {
+        border-left: 3px solid var(--accent-2);
+        padding-left: 12px;
+      }
+
+      .accent {
+        color: var(--accent);
+      }
+
+      @media (max-width: 760px) {
+        main {
+          padding: 18px 16px 28px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="hero">
+        <p class="eyebrow">README / Help</p>
+        <h1>Particle Simulator</h1>
+        <p class="lead">
+          A C++20 2D particle simulator with a native desktop renderer, a C++ web server, and a React-based browser UI
+          for building scenarios and streaming live simulation snapshots.
+        </p>
+      </div>
+
+      <div class="grid">
+        <section>
+          <h2>Key Features</h2>
+          <ul>
+            <li>Native C++ simulation core shared by desktop and web experiences</li>
+            <li>JSON scenarios for particles, forces, bounds, and obstacles</li>
+            <li>Live browser playback over WebSocket</li>
+            <li>Scenario builder for authoring and editing setups in the browser</li>
+            <li>Pause, reset, step, and speed controls</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Desktop Controls</h2>
+          <ul>
+            <li><code>Space</code>: pause or resume</li>
+            <li><code>R</code>: reset to the initial state</li>
+            <li><code>N</code>: single simulation step while paused</li>
+            <li><code>Esc</code>: close the window</li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="grid" style="margin-top: 16px;">
+        <section>
+          <h2>Build</h2>
+          <pre><code>cmake -S . -B build
+cmake --build build --config Release</code></pre>
+        </section>
+
+        <section>
+          <h2>Run Desktop App</h2>
+          <pre><code>.\build\Release\particle_simulator.exe .\scenarios\minimal_zero_gravity.json</code></pre>
+        </section>
+      </div>
+
+      <div class="grid" style="margin-top: 16px;">
+        <section>
+          <h2>Web Frontend Setup</h2>
+          <pre><code>cd .\web
+npm install
+npm run build</code></pre>
+        </section>
+
+        <section>
+          <h2>Start Web Server</h2>
+          <pre><code>cd ..
+.\build\Release\particle_simulator_web_server.exe --web-root web/dist --scenario-dir scenarios</code></pre>
+        </section>
+      </div>
+
+      <section style="margin-top: 16px;">
+        <h2>Web API</h2>
+        <ul>
+          <li><code>GET /api/scenarios</code> lists bundled example scenarios</li>
+          <li><code>POST /api/session</code> creates a simulation session from scenario JSON</li>
+          <li><code>GET /ws?sessionId=...</code> streams snapshots and accepts playback commands</li>
+        </ul>
+        <p class="note">
+          Supported WebSocket commands include <code>play</code>, <code>pause</code>, <code>reset</code>,
+          <code>step</code>, and <code>setSpeed</code>.
+        </p>
+      </section>
+
+      <section style="margin-top: 16px;">
+        <h2>Scenario Schema</h2>
+        <p>
+          A valid scenario defines <span class="accent">particle types</span>, <span class="accent">spawn groups</span>,
+          and <span class="accent">geometry</span>. Optional sections include <code>window</code>,
+          <code>simulation</code>, and <code>forces</code>.
+        </p>
+        <ul>
+          <li><code>window</code>: rendering size, title, background, FPS</li>
+          <li><code>simulation</code>: timestep, seed, collision iterations, grid size</li>
+          <li><code>forces</code>: gravity, drag, wind, and radial fields</li>
+          <li><code>particleTypes</code>: radius, mass, restitution, color, initial velocity</li>
+          <li><code>spawnGroups</code>: particle counts plus spawn position and velocity ranges</li>
+          <li><code>geometry</code>: world bounds and rectangle/circle obstacles</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
